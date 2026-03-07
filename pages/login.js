@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import { Eye, EyeOff, Wifi, Lock, User, Loader2, Key, ChevronDown, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, Wifi, Lock, User, Loader2, Key, ChevronDown, CheckCircle, ArrowLeft, Shield } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../services/supabaseClient'
 
@@ -30,10 +30,9 @@ export default function LoginPage() {
   const [successName, setSuccessName] = useState('')
 
   function handleToggleSetup() {
-    setShowSetup(prev => !prev)
-    setSetupStep(1); setSetupSecret(''); setSecretError('')
-    setPendingAdmins([]); setSelectedAdmin(null)
-    setNewUsername(''); setNewPassword(''); setConfirmPassword(''); setSetupError('')
+    setShowSetup(p => !p); setSetupStep(1); setSetupSecret(''); setSecretError('')
+    setPendingAdmins([]); setSelectedAdmin(null); setNewUsername('')
+    setNewPassword(''); setConfirmPassword(''); setSetupError('')
   }
 
   async function handleSecretSubmit(e) {
@@ -42,10 +41,10 @@ export default function LoginPage() {
     setLoadingAdmins(true)
     try {
       const res = await fetch('/api/setup/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ setupSecret }) })
-      if (!res.ok) { const data = await res.json(); setSecretError(data.message || 'Kode salah'); return }
+      if (!res.ok) { const d = await res.json(); setSecretError(d.message || 'Kode salah'); return }
       const { data, error } = await supabase.from('admins').select('id, full_name').is('username', null).eq('role', 'admin').order('full_name')
       if (error) throw error
-      if (!data || data.length === 0) { setSecretError('Semua admin sudah memiliki akun.'); return }
+      if (!data?.length) { setSecretError('Semua admin sudah memiliki akun.'); return }
       setPendingAdmins(data); setSetupStep(2)
     } catch { setSecretError('Gagal menghubungi server') }
     finally { setLoadingAdmins(false) }
@@ -60,8 +59,8 @@ export default function LoginPage() {
     setSetupLoading(true)
     try {
       const res = await fetch('/api/setup/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminId: selectedAdmin.id, username: newUsername.toLowerCase().trim(), password: newPassword, setupSecret }) })
-      const data = await res.json()
-      if (!res.ok) { setSetupError(data.message || 'Terjadi kesalahan'); return }
+      const d = await res.json()
+      if (!res.ok) { setSetupError(d.message || 'Terjadi kesalahan'); return }
       setSuccessName(selectedAdmin.full_name); setSetupStep(3)
     } catch { setSetupError('Gagal menghubungi server') }
     finally { setSetupLoading(false) }
@@ -76,283 +75,394 @@ export default function LoginPage() {
     finally { setLoading(false) }
   }
 
-  const inp = {
-    base: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', borderRadius: '12px', padding: '12px 16px', width: '100%', fontSize: '14px', outline: 'none', fontFamily: "'JetBrains Mono', monospace", transition: 'all 0.2s' },
-  }
-
   return (
     <>
       <Head>
-        <title>WifiSekre.net</title>
+        <title>WifiSekre.net — Login</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
         <style>{`
-          .lp-root { font-family: 'Sora', sans-serif !important; }
-          .lp-mono { font-family: 'JetBrains Mono', monospace !important; }
-          .lp-bg {
-            background-color: #07080f;
-            background-image:
-              radial-gradient(ellipse 80% 50% at 50% -5%, rgba(124,58,237,0.4) 0%, transparent 60%),
-              radial-gradient(ellipse 35% 35% at 80% 85%, rgba(99,102,241,0.15) 0%, transparent 55%),
-              radial-gradient(ellipse 25% 25% at 15% 65%, rgba(139,92,246,0.1) 0%, transparent 50%);
+          .lp { font-family: 'DM Sans', sans-serif; }
+          .lp-mono { font-family: 'Fira Code', monospace; }
+
+          /* ── Full page layout ── */
+          .lp-wrap {
+            min-height: 100vh;
+            display: flex;
+            background: #faf9ff;
           }
-          .lp-grid {
-            background-image:
-              linear-gradient(rgba(139,92,246,0.07) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(139,92,246,0.07) 1px, transparent 1px);
-            background-size: 44px 44px;
-          }
-          .lp-grid-dots {
-            background-image: radial-gradient(circle, rgba(139,92,246,0.22) 1px, transparent 1px);
-            background-size: 44px 44px;
-            background-position: -1px -1px;
-          }
-          .lp-card {
-            background: rgba(255,255,255,0.03);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 20px;
-            padding: 32px;
-          }
-          .lp-input {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #f1f5f9;
-            border-radius: 12px;
-            padding: 12px 16px;
-            width: 100%;
-            font-size: 14px;
-            outline: none;
-            font-family: 'JetBrains Mono', monospace;
-            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-            box-sizing: border-box;
-          }
-          .lp-input::placeholder { color: rgba(148,163,184,0.4); }
-          .lp-input:focus {
-            border-color: rgba(139,92,246,0.65);
-            background: rgba(139,92,246,0.08);
-            box-shadow: 0 0 0 3px rgba(139,92,246,0.14);
-          }
-          .lp-input.lp-input-pl { padding-left: 42px; }
-          .lp-input.lp-input-pr { padding-right: 44px; }
-          .lp-input.lp-err { border-color: rgba(239,68,68,0.55); background: rgba(239,68,68,0.06); }
-          .lp-label {
-            display: block;
-            font-size: 10.5px;
-            font-weight: 600;
-            letter-spacing: 0.09em;
-            text-transform: uppercase;
-            color: rgba(148,163,184,0.6);
-            margin-bottom: 7px;
-          }
-          .lp-btn {
-            width: 100%;
-            padding: 13px;
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #8B5CF6 100%);
-            color: white;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            letter-spacing: 0.015em;
-            border: none;
-            cursor: pointer;
+
+          /* ── Left decorative panel ── */
+          .lp-left {
+            display: none;
             position: relative;
             overflow: hidden;
-            transition: transform 0.15s, box-shadow 0.15s;
-            box-shadow: 0 4px 20px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: linear-gradient(145deg, #6d28d9 0%, #7c3aed 40%, #8B5CF6 70%, #a78bfa 100%);
           }
-          .lp-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.15); }
-          .lp-btn:active:not(:disabled) { transform: translateY(0); }
-          .lp-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-          .lp-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.22); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #fca5a5; display: flex; align-items: center; gap: 8px; }
-          .lp-ring {
-            position: absolute; border-radius: 50%;
-            border: 1px solid rgba(139,92,246,0.2);
-            animation: lp-ring 3s ease-out infinite;
+          @media (min-width: 1024px) { .lp-left { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; } }
+
+          .lp-left-noise {
+            position: absolute; inset: 0; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
           }
-          @keyframes lp-ring {
-            0% { transform: scale(0.7); opacity: 1; }
-            100% { transform: scale(1.8); opacity: 0; }
+
+          /* Floating signal arcs */
+          .signal-wrap {
+            position: relative;
+            width: 240px; height: 240px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 40px;
           }
-          .lp-slide { animation: lp-slideup 0.55s cubic-bezier(0.22,1,0.36,1) both; }
-          .lp-slide-d { animation: lp-slideup 0.55s cubic-bezier(0.22,1,0.36,1) 0.1s both; }
-          @keyframes lp-slideup {
-            from { opacity: 0; transform: translateY(18px); }
-            to { opacity: 1; transform: translateY(0); }
+          .signal-arc {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.22);
+            animation: arc-pulse 3s ease-out infinite;
           }
-          .lp-setup-btn {
-            width: 100%;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 11px 15px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
+          .signal-arc:nth-child(1) { width: 80px; height: 80px; animation-delay: 0s; }
+          .signal-arc:nth-child(2) { width: 130px; height: 130px; animation-delay: 0.6s; }
+          .signal-arc:nth-child(3) { width: 185px; height: 185px; animation-delay: 1.2s; }
+          .signal-arc:nth-child(4) { width: 240px; height: 240px; animation-delay: 1.8s; }
+          @keyframes arc-pulse {
+            0% { transform: scale(0.85); opacity: 0.9; }
+            100% { transform: scale(1.05); opacity: 0; }
+          }
+          .signal-core {
+            position: relative; z-index: 1;
+            width: 72px; height: 72px; border-radius: 20px;
+            background: rgba(255,255,255,0.18);
+            border: 1.5px solid rgba(255,255,255,0.35);
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3);
+          }
+
+          /* Floating stat chips */
+          .stat-chip {
+            position: absolute;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.25);
             border-radius: 12px;
-            color: rgba(148,163,184,0.6);
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 10px 16px;
+            backdrop-filter: blur(12px);
+            display: flex; align-items: center; gap: 8px;
+            animation: float 6s ease-in-out infinite;
           }
-          .lp-setup-btn:hover { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.28); color: #c4b5fd; }
+          .stat-chip:nth-child(1) { top: 12%; left: 8%; animation-delay: 0s; }
+          .stat-chip:nth-child(2) { top: 20%; right: 6%; animation-delay: 1.5s; }
+          .stat-chip:nth-child(3) { bottom: 22%; left: 6%; animation-delay: 3s; }
+          .stat-chip:nth-child(4) { bottom: 14%; right: 8%; animation-delay: 4.5s; }
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+
+          /* Diagonal lines bg */
+          .lp-left::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: repeating-linear-gradient(
+              -45deg,
+              transparent 0, transparent 24px,
+              rgba(255,255,255,0.03) 24px, rgba(255,255,255,0.03) 25px
+            );
+          }
+
+          /* ── Right form panel ── */
+          .lp-right {
+            width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 32px 24px;
+            background: #ffffff;
+          }
+          @media (min-width: 1024px) { .lp-right { width: 440px; flex-shrink: 0; } }
+
+          .lp-form-wrap { width: 100%; max-width: 360px; }
+
+          /* ── Inputs ── */
+          .lp-input {
+            width: 100%; padding: 11px 14px 11px 42px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #111827;
+            background: #fafafa;
+            outline: none;
+            transition: all 0.18s;
+            font-family: 'Fira Code', monospace;
+            box-sizing: border-box;
+          }
+          .lp-input::placeholder { color: #9ca3af; font-family: 'DM Sans', sans-serif; }
+          .lp-input:focus {
+            border-color: #8B5CF6;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+          }
+          .lp-input.lp-input-pr { padding-right: 42px; }
+          .lp-input.err { border-color: #f87171; background: #fff5f5; }
+
+          /* ── Primary button ── */
+          .lp-btn-primary {
+            width: 100%; padding: 12px;
+            background: linear-gradient(135deg, #7c3aed 0%, #8B5CF6 100%);
+            color: white; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; position: relative; overflow: hidden;
+            transition: all 0.18s;
+            box-shadow: 0 4px 14px rgba(124,58,237,0.35);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-family: 'DM Sans', sans-serif;
+          }
+          .lp-btn-primary::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+          }
+          .lp-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(124,58,237,0.45); }
+          .lp-btn-primary:active:not(:disabled) { transform: translateY(0); }
+          .lp-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+          /* ── Label ── */
+          .lp-label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; letter-spacing: 0.01em; }
+
+          /* ── Error box ── */
+          .lp-error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #dc2626; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+
+          /* ── Setup toggle ── */
+          .lp-setup-toggle {
+            width: 100%; display: flex; align-items: center; justify-content: space-between;
+            padding: 11px 14px; border: 1.5px dashed #e5e7eb; border-radius: 10px;
+            background: transparent; cursor: pointer; color: #6b7280; font-size: 13px;
+            transition: all 0.18s; font-family: 'DM Sans', sans-serif;
+          }
+          .lp-setup-toggle:hover { border-color: #8B5CF6; color: #7c3aed; background: #f5f3ff; }
+
+          /* ── Admin option ── */
           .lp-admin-opt {
             width: 100%; display: flex; align-items: center; gap: 10px;
-            padding: 10px 13px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-            text-align: left; cursor: pointer;
-            transition: all 0.15s;
-            color: #cbd5e1; font-size: 13px;
+            padding: 10px 12px; border: 1.5px solid #e5e7eb; border-radius: 9px;
+            background: white; cursor: pointer; font-size: 13px; color: #374151;
+            transition: all 0.15s; text-align: left; font-family: 'DM Sans', sans-serif;
           }
-          .lp-admin-opt:hover { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.3); }
-          .lp-admin-opt.sel { background: rgba(139,92,246,0.14); border-color: rgba(139,92,246,0.45); color: #c4b5fd; }
-          .lp-hr { height: 1px; background: rgba(255,255,255,0.07); margin: 22px 0; }
-          .lp-step-dot { height: 4px; border-radius: 4px; transition: all 0.3s; }
+          .lp-admin-opt:hover { border-color: #a78bfa; background: #f5f3ff; }
+          .lp-admin-opt.sel { border-color: #8B5CF6; background: #f5f3ff; color: #6d28d9; }
+
+          /* ── Step indicator ── */
+          .lp-step { height: 3px; border-radius: 99px; transition: all 0.3s; }
+
+          /* ── Divider ── */
+          .lp-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+          .lp-divider::before, .lp-divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+
+          /* ── Page animation ── */
+          .lp-fadein { animation: lp-fadein 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+          .lp-fadein-d { animation: lp-fadein 0.45s cubic-bezier(0.22,1,0.36,1) 0.08s both; }
+          @keyframes lp-fadein {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
         `}</style>
       </Head>
 
-      <div className="lp-root lp-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Grid layers */}
-        <div className="lp-grid absolute inset-0 pointer-events-none" />
-        <div className="lp-grid-dots absolute inset-0 pointer-events-none" />
-        {/* Top glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
-          style={{ width: '700px', height: '320px', background: 'radial-gradient(ellipse, rgba(124,58,237,0.18) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(1px)' }} />
+      <div className="lp lp-wrap">
 
-        <div className="relative w-full lp-slide" style={{ maxWidth: '390px' }}>
+        {/* ── LEFT PANEL ── */}
+        <div className="lp-left">
+          <div className="lp-left-noise" />
 
-          {/* Logo */}
-          <div className="text-center mb-9">
-            <div className="relative inline-flex items-center justify-center mb-5" style={{ width: '72px', height: '72px' }}>
-              <div className="lp-ring" style={{ width: '72px', height: '72px', animationDelay: '0s' }} />
-              <div className="lp-ring" style={{ width: '72px', height: '72px', animationDelay: '1s' }} />
-              <div className="lp-ring" style={{ width: '72px', height: '72px', animationDelay: '2s' }} />
-              <div style={{ width: '56px', height: '56px', background: 'linear-gradient(145deg, #7c3aed, #5b21b6)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 24px rgba(124,58,237,0.6), 0 0 60px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.2)', border: '1px solid rgba(196,181,253,0.25)', position: 'relative', zIndex: 1 }}>
-                <Wifi style={{ width: '26px', height: '26px', color: 'white' }} />
-              </div>
+          {/* Floating chips */}
+          <div className="stat-chip">
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Wifi style={{ width: 14, height: 14, color: 'white' }} />
             </div>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>
-              WifiSekre<span style={{ color: '#a78bfa' }}>.net</span>
-            </h1>
-            <p style={{ fontSize: '13px', color: 'rgba(148,163,184,0.55)', marginTop: '6px' }}>
-              Sistem Manajemen Voucher WiFi
-            </p>
+            <div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1 }}>Voucher Aktif</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'white', lineHeight: 1.3 }}>440</div>
+            </div>
+          </div>
+          <div className="stat-chip">
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Shield style={{ width: 14, height: 14, color: 'white' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1 }}>Super Aman</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'white', lineHeight: 1.3 }}>v1.0</div>
+            </div>
+          </div>
+          <div className="stat-chip">
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
+            <div style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>Sistem Online</div>
+          </div>
+          <div className="stat-chip">
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 6px #fbbf24' }} />
+            <div style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>Real-time Sync</div>
           </div>
 
-          {/* Card */}
-          <div className="lp-card lp-slide-d">
+          {/* Center signal animation */}
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="signal-wrap">
+              <div className="signal-arc" />
+              <div className="signal-arc" />
+              <div className="signal-arc" />
+              <div className="signal-arc" />
+              <div className="signal-core">
+                <Wifi style={{ width: 32, height: 32, color: 'white' }} />
+              </div>
+            </div>
+
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: 'white', textAlign: 'center', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: 12 }}>
+              WifiSekre<span style={{ color: 'rgba(255,255,255,0.55)' }}>.net</span>
+            </h2>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
+              Sistem manajemen voucher WiFi yang cepat, aman, dan terpercaya
+            </p>
+
+            {/* Feature list */}
+            <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {['Manajemen voucher real-time', 'Laporan penjualan lengkap', 'Multi-admin dengan log aktivitas'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <CheckCircle style={{ width: 12, height: 12, color: 'white' }} />
+                  </div>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── RIGHT PANEL ── */}
+        <div className="lp-right" style={{ colorScheme: 'light' }}>
+          <div className="lp-form-wrap">
+
+            {/* Mobile logo */}
+            <div className="lp-fadein" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #7c3aed, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(124,58,237,0.35)', flexShrink: 0 }}>
+                <Wifi style={{ width: 20, height: 20, color: 'white' }} />
+              </div>
+              <div>
+                <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', letterSpacing: '-0.01em', lineHeight: 1.2 }}>WifiSekre<span style={{ color: '#7c3aed' }}>.net</span></p>
+                <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>Management System</p>
+              </div>
+            </div>
 
             {!showSetup ? (
-              /* ── LOGIN ── */
-              <>
-                <div style={{ marginBottom: '24px' }}>
-                  <h2 style={{ fontSize: '17px', fontWeight: 600, color: 'white', letterSpacing: '-0.01em' }}>Masuk ke Akun</h2>
-                  <p style={{ fontSize: '12px', color: 'rgba(148,163,184,0.45)', marginTop: '4px' }}>Masukkan kredensial admin kamu</p>
+              /* ── LOGIN FORM ── */
+              <div className="lp-fadein-d">
+                <div style={{ marginBottom: 28 }}>
+                  <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Selamat datang</h1>
+                  <p style={{ fontSize: 14, color: '#6b7280', marginTop: 5 }}>Masuk ke akun admin kamu</p>
                 </div>
 
                 {error && (
-                  <div className="lp-error" style={{ marginBottom: '18px' }}>
-                    <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '11px', fontWeight: 700, color: '#f87171' }}>!</span>
+                  <div className="lp-error">
+                    <span style={{ width: 18, height: 18, borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700, color: '#dc2626' }}>!</span>
                     {error}
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
                     <label className="lp-label">Username</label>
                     <div style={{ position: 'relative' }}>
-                      <User style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                      <User style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#9ca3af' }} />
                       <input type="text" autoComplete="username" value={form.username}
                         onChange={e => setForm(p => ({ ...p, username: e.target.value }))}
-                        placeholder="username" className="lp-input lp-input-pl" />
+                        placeholder="Masukkan username"
+                        className="lp-input lp-mono" />
                     </div>
                   </div>
 
                   <div>
                     <label className="lp-label">Password</label>
                     <div style={{ position: 'relative' }}>
-                      <Lock style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                      <Lock style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#9ca3af' }} />
                       <input type={showPassword ? 'text' : 'password'} autoComplete="current-password"
                         value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                        placeholder="••••••••" className="lp-input lp-input-pl lp-input-pr" />
+                        placeholder="Masukkan password"
+                        className="lp-input lp-input-pr lp-mono" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(148,163,184,0.4)', padding: 0 }}>
-                        {showPassword ? <EyeOff style={{ width: '15px', height: '15px' }} /> : <Eye style={{ width: '15px', height: '15px' }} />}
+                        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}>
+                        {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ paddingTop: '4px' }}>
-                    <button type="submit" disabled={loading} className="lp-btn">
-                      {loading ? <><Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} /> Memverifikasi...</> : 'Masuk'}
+                  <div style={{ paddingTop: 4 }}>
+                    <button type="submit" disabled={loading} className="lp-btn-primary">
+                      {loading ? <><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />Memverifikasi...</> : 'Masuk'}
                     </button>
                   </div>
                 </form>
 
-                <div className="lp-hr" />
+                <div className="lp-divider">
+                  <span style={{ fontSize: 12, color: '#9ca3af', whiteSpace: 'nowrap' }}>Admin baru?</span>
+                </div>
 
-                <button onClick={handleToggleSetup} className="lp-setup-btn" style={{ fontFamily: 'Sora, sans-serif' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Key style={{ width: '13px', height: '13px', color: '#8B5CF6' }} />
-                    Admin baru? Aktivasi akun
+                <button onClick={handleToggleSetup} className="lp-setup-toggle">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Key style={{ width: 14, height: 14, color: '#8B5CF6' }} />
+                    Aktivasi akun admin baru
                   </span>
-                  <ChevronDown style={{ width: '15px', height: '15px' }} />
+                  <ChevronDown style={{ width: 15, height: 15 }} />
                 </button>
-              </>
+              </div>
             ) : (
-              /* ── SETUP ── */
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              /* ── SETUP PANEL ── */
+              <div className="lp-fadein-d">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                   <button onClick={handleToggleSetup}
-                    style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(148,163,184,0.6)', flexShrink: 0 }}>
-                    <ArrowLeft style={{ width: '15px', height: '15px' }} />
+                    style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid #e5e7eb', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280', flexShrink: 0, transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#8B5CF6'; e.currentTarget.style.color = '#7c3aed' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#6b7280' }}>
+                    <ArrowLeft style={{ width: 15, height: 15 }} />
                   </button>
-                  <div>
-                    <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'white' }}>Aktivasi Akun</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '5px' }}>
+                  <div style={{ flex: 1 }}>
+                    <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', letterSpacing: '-0.01em' }}>Aktivasi Akun</h2>
+                    <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
                       {[1, 2].map(s => (
-                        <div key={s} className="lp-step-dot"
-                          style={{ width: setupStep > s ? '18px' : setupStep === s ? '24px' : '8px', background: setupStep >= s ? '#8B5CF6' : 'rgba(255,255,255,0.1)' }} />
+                        <div key={s} className="lp-step"
+                          style={{ width: setupStep >= s ? 28 : 10, background: setupStep >= s ? '#8B5CF6' : '#e5e7eb' }} />
                       ))}
-                      <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.4)', marginLeft: '4px' }}>
-                        {setupStep === 1 ? 'Verifikasi' : setupStep === 2 ? 'Buat Akun' : 'Selesai'}
+                      <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 4 }}>
+                        {setupStep === 1 ? 'Verifikasi kode' : setupStep === 2 ? 'Buat akun' : 'Selesai'}
                       </span>
                     </div>
                   </div>
                 </div>
 
+                {/* Step 1 */}
                 {setupStep === 1 && (
-                  <form onSubmit={handleSecretSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <form onSubmit={handleSecretSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div>
                       <label className="lp-label">Kode Rahasia</label>
                       <div style={{ position: 'relative' }}>
-                        <Key style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                        <Key style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: '#9ca3af' }} />
                         <input type="text" value={setupSecret} onChange={e => setSetupSecret(e.target.value)}
-                          placeholder="Kode dari superadmin" className="lp-input lp-input-pl" />
+                          placeholder="Kode dari superadmin" className="lp-input lp-mono" />
                       </div>
-                      {secretError && <p style={{ fontSize: '12px', color: '#fca5a5', marginTop: '6px' }}>{secretError}</p>}
-                      <p style={{ fontSize: '11.5px', color: 'rgba(148,163,184,0.38)', marginTop: '5px' }}>Hubungi superadmin untuk mendapatkan kode ini.</p>
+                      {secretError && <p style={{ fontSize: 12, color: '#dc2626', marginTop: 5 }}>{secretError}</p>}
+                      <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>Hubungi superadmin untuk mendapatkan kode ini.</p>
                     </div>
-                    <button type="submit" disabled={loadingAdmins} className="lp-btn">
-                      {loadingAdmins ? <><Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} /> Memverifikasi...</> : 'Verifikasi Kode'}
+                    <button type="submit" disabled={loadingAdmins} className="lp-btn-primary">
+                      {loadingAdmins ? <><Loader2 style={{ width: 15, height: 15, animation: 'spin 1s linear infinite' }} />Memverifikasi...</> : 'Verifikasi Kode'}
                     </button>
                   </form>
                 )}
 
+                {/* Step 2 */}
                 {setupStep === 2 && (
-                  <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div>
-                      <label className="lp-label">Pilih Nama Kamu</label>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                      <label className="lp-label">Nama Kamu</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                         {pendingAdmins.map(admin => (
                           <button key={admin.id} type="button" onClick={() => setSelectedAdmin(admin)}
-                            className={`lp-admin-opt ${selectedAdmin?.id === admin.id ? 'sel' : ''}`} style={{ fontFamily: 'Sora, sans-serif' }}>
-                            <div style={{ width: '28px', height: '28px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px', flexShrink: 0, background: selectedAdmin?.id === admin.id ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.07)', color: selectedAdmin?.id === admin.id ? '#c4b5fd' : 'rgba(148,163,184,0.6)' }}>
+                            className={`lp-admin-opt ${selectedAdmin?.id === admin.id ? 'sel' : ''}`}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: selectedAdmin?.id === admin.id ? '#ede9fe' : '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0, color: selectedAdmin?.id === admin.id ? '#7c3aed' : '#6b7280' }}>
                               {admin.full_name.charAt(0)}
                             </div>
                             <span style={{ fontWeight: 500 }}>{admin.full_name}</span>
-                            {selectedAdmin?.id === admin.id && <CheckCircle style={{ width: '15px', height: '15px', marginLeft: 'auto', flexShrink: 0, color: '#8B5CF6' }} />}
+                            {selectedAdmin?.id === admin.id && <CheckCircle style={{ width: 15, height: 15, marginLeft: 'auto', color: '#8B5CF6', flexShrink: 0 }} />}
                           </button>
                         ))}
                       </div>
@@ -360,65 +470,63 @@ export default function LoginPage() {
                     <div>
                       <label className="lp-label">Username</label>
                       <div style={{ position: 'relative' }}>
-                        <User style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                        <User style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: '#9ca3af' }} />
                         <input type="text" value={newUsername} onChange={e => setNewUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
-                          placeholder="Username untuk login" className="lp-input lp-input-pl" />
+                          placeholder="Username untuk login" className="lp-input lp-mono" />
                       </div>
                     </div>
                     <div>
                       <label className="lp-label">Password</label>
                       <div style={{ position: 'relative' }}>
-                        <Lock style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                        <Lock style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: '#9ca3af' }} />
                         <input type={showNewPass ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                          placeholder="Min. 6 karakter" className="lp-input lp-input-pl lp-input-pr" />
+                          placeholder="Min. 6 karakter" className="lp-input lp-input-pr lp-mono" />
                         <button type="button" onClick={() => setShowNewPass(!showNewPass)}
-                          style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(148,163,184,0.4)', padding: 0 }}>
-                          {showNewPass ? <EyeOff style={{ width: '15px', height: '15px' }} /> : <Eye style={{ width: '15px', height: '15px' }} />}
+                          style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}>
+                          {showNewPass ? <EyeOff style={{ width: 15, height: 15 }} /> : <Eye style={{ width: 15, height: 15 }} />}
                         </button>
                       </div>
                     </div>
                     <div>
                       <label className="lp-label">Konfirmasi Password</label>
                       <div style={{ position: 'relative' }}>
-                        <Lock style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                        <Lock style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: '#9ca3af' }} />
                         <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                           placeholder="Ulangi password"
-                          className={`lp-input lp-input-pl lp-input-pr ${confirmPassword && confirmPassword !== newPassword ? 'lp-err' : ''}`} />
+                          className={`lp-input lp-input-pr lp-mono ${confirmPassword && confirmPassword !== newPassword ? 'err' : ''}`} />
                         <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                          style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(148,163,184,0.4)', padding: 0 }}>
-                          {showConfirm ? <EyeOff style={{ width: '15px', height: '15px' }} /> : <Eye style={{ width: '15px', height: '15px' }} />}
+                          style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}>
+                          {showConfirm ? <EyeOff style={{ width: 15, height: 15 }} /> : <Eye style={{ width: 15, height: 15 }} />}
                         </button>
                       </div>
                     </div>
-                    {setupError && <div className="lp-error"><span style={{ fontSize: '11px', fontWeight: 700, color: '#f87171', flexShrink: 0 }}>!</span>{setupError}</div>}
-                    <button type="submit" disabled={setupLoading} className="lp-btn">
-                      {setupLoading ? <><Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} /> Menyimpan...</> : <><CheckCircle style={{ width: '16px', height: '16px' }} /> Aktivasi Akun</>}
+                    {setupError && <div className="lp-error" style={{ margin: 0 }}><span style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', flexShrink: 0 }}>!</span>{setupError}</div>}
+                    <button type="submit" disabled={setupLoading} className="lp-btn-primary">
+                      {setupLoading ? <><Loader2 style={{ width: 15, height: 15, animation: 'spin 1s linear infinite' }} />Menyimpan...</> : <><CheckCircle style={{ width: 15, height: 15 }} />Aktivasi Akun</>}
                     </button>
                   </form>
                 )}
 
+                {/* Step 3 */}
                 {setupStep === 3 && (
-                  <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                    <div style={{ width: '60px', height: '60px', borderRadius: '18px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                      <CheckCircle style={{ width: '28px', height: '28px', color: '#4ade80' }} />
+                  <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                    <div style={{ width: 64, height: 64, borderRadius: 18, background: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <CheckCircle style={{ width: 30, height: 30, color: '#16a34a' }} />
                     </div>
-                    <h3 style={{ fontWeight: 600, color: 'white', marginBottom: '6px' }}>Akun Aktif, {successName}! 🎉</h3>
-                    <p style={{ fontSize: '12px', color: 'rgba(148,163,184,0.45)', marginBottom: '20px' }}>
-                      Gunakan username & password yang baru kamu buat untuk login.
-                    </p>
-                    <button type="button" onClick={() => { setShowSetup(false); setSetupStep(1) }} className="lp-btn">
+                    <h3 style={{ fontWeight: 700, color: '#111827', fontSize: 17, marginBottom: 6 }}>Akun Aktif! 🎉</h3>
+                    <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 20, lineHeight: 1.5 }}>Halo <strong style={{ color: '#7c3aed' }}>{successName}</strong>! Gunakan username & password barumu untuk login.</p>
+                    <button type="button" onClick={() => { setShowSetup(false); setSetupStep(1) }} className="lp-btn-primary">
                       Login Sekarang
                     </button>
                   </div>
                 )}
               </div>
             )}
-          </div>
 
-          {/* Footer */}
-          <p className="lp-mono" style={{ textAlign: 'center', fontSize: '10px', color: 'rgba(148,163,184,0.2)', marginTop: '20px', letterSpacing: '0.08em' }}>
-            WIFI VOUCHER MANAGEMENT · v2.0.2
-          </p>
+            <p style={{ textAlign: 'center', fontSize: 11, color: '#d1d5db', marginTop: 28 }}>
+              WiFi Voucher Management System · v1.0
+            </p>
+          </div>
         </div>
       </div>
     </>
