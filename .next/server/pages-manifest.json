@@ -2,12 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/sales": "pages/sales.js",
   "/dashboard": "pages/dashboard.js",
-  "/logs": "pages/logs.js",
-  "/admins": "pages/admins.js",
-  "/api/admins": "pages/api/admins.js",
-  "/debts": "pages/debts.js",
-  "/vouchers": "pages/vouchers.js",
-  "/sell": "pages/sell.js"
+  "/": "pages/index.js",
+  "/sales": "pages/sales.js"
 }

@@ -36,7 +36,7 @@ export default function AppLayout({ children }) {
   const navItems = NAV_ITEMS.filter(item => !item.superadminOnly || isSuperAdmin)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex transition-colors duration-200">
+    <div className="h-screen bg-gray-50 dark:bg-gray-950 flex transition-colors duration-200 overflow-hidden">
 
       {/* Sidebar overlay (mobile) */}
       {sidebarOpen && (
@@ -48,11 +48,11 @@ export default function AppLayout({ children }) {
 
       {/* Sidebar */}
       <aside className={clsx(
-        'fixed inset-y-0 left-0 z-50 w-64 flex flex-col',
+        'fixed inset-y-0 left-0 z-50 w-64 flex flex-col h-full',
         'bg-white dark:bg-gray-900',
         'border-r border-gray-200 dark:border-gray-800',
         'transform transition-transform duration-300 ease-in-out',
-        'lg:relative lg:translate-x-0',
+        'lg:relative lg:translate-x-0 lg:h-screen lg:sticky lg:top-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full',
       )}>
 
@@ -96,7 +96,7 @@ export default function AppLayout({ children }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 min-h-0 px-3 py-4 space-y-0.5 overflow-y-auto">
           {navItems.map(item => {
             const Icon   = item.icon
             const active = router.pathname === item.href
@@ -132,7 +132,7 @@ export default function AppLayout({ children }) {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
         {/* Topbar */}
         <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 lg:px-6 py-3.5 transition-colors duration-200">
@@ -188,7 +188,7 @@ export default function AppLayout({ children }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 lg:p-6 animate-fade-in pb-24 lg:pb-6">
+        <main className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 animate-fade-in pb-24 lg:pb-6">
           {children}
         </main>
 

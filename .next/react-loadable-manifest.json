@@ -17,12 +17,6 @@
       "static/chunks/node_modules_html2canvas_dist_html2canvas_js.js"
     ]
   },
-  "utils\\generateVoucherImage.js -> html2canvas": {
-    "id": "utils\\generateVoucherImage.js -> html2canvas",
-    "files": [
-      "static/chunks/node_modules_html2canvas_dist_html2canvas_js.js"
-    ]
-  },
   "utils\\pdfGenerator.js -> jspdf": {
     "id": "utils\\pdfGenerator.js -> jspdf",
     "files": [
