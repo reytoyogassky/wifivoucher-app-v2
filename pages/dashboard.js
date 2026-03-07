@@ -304,15 +304,15 @@ function DashboardPage() {
             <h3 className="font-bold text-gray-900 dark:text-white mb-4">Status Voucher</h3>
             <div className="grid grid-cols-2 gap-4 max-w-sm">
               {[
-                { label: 'Tersedia', key: 'available', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { label: 'Terjual', key: 'sold', color: 'text-primary-600', bg: 'bg-primary-50' },
+                { label: 'Tersedia', key: 'available', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                { label: 'Terjual', key: 'sold', color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-50 dark:bg-primary-900/20' },
               ].map(item => (
                 <div key={item.key} className={`${item.bg} rounded-2xl p-4`}>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{item.label}</p>
                   <p className={`text-3xl font-bold ${item.color}`}>
                     {stats.voucherStats[item.key] ?? 0}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">voucher</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">voucher</p>
                 </div>
               ))}
             </div>

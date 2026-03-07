@@ -534,10 +534,10 @@ function ManualInputModal({ isOpen, onClose, onSuccess }) {
     >
       <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
         {rows.map((row, idx) => (
-          <div key={row._id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-3 space-y-3 bg-gray-50/50 dark:bg-gray-800/30">
+          <div key={row._id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-3 space-y-3 bg-gray-50/50 dark:bg-gray-800/40">
             {/* Row header */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Voucher #{idx + 1}</span>
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500">Voucher #{idx + 1}</span>
               {rows.length > 1 && (
                 <button onClick={() => removeRow(row._id)} className="text-gray-400 hover:text-red-500 transition p-0.5 rounded">
                   <X className="w-3.5 h-3.5" />
@@ -547,9 +547,9 @@ function ManualInputModal({ isOpen, onClose, onSuccess }) {
 
             {/* Kode */}
             <div>
-              <label className="label text-xs">Kode Voucher <span className="text-red-500">*</span></label>
+              <label className="label text-xs dark:text-gray-300">Kode Voucher <span className="text-red-500">*</span></label>
               <input
-                className={clsx('input font-mono text-sm', errors[`${row._id}_code`] && 'border-red-400 focus:ring-red-300')}
+                className={clsx('input font-mono text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100', errors[`${row._id}_code`] && 'border-red-400 focus:ring-red-300')}
                 placeholder="cth: 4Xk9mP2q"
                 value={row.code}
                 onChange={e => updateRow(row._id, 'code', e.target.value)}
@@ -561,9 +561,9 @@ function ManualInputModal({ isOpen, onClose, onSuccess }) {
             {/* Paket + Durasi */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="label text-xs">Nama Paket <span className="text-red-500">*</span></label>
+                <label className="label text-xs dark:text-gray-300">Nama Paket <span className="text-red-500">*</span></label>
                 <input
-                  className={clsx('input text-sm', errors[`${row._id}_packageName`] && 'border-red-400')}
+                  className={clsx('input text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100', errors[`${row._id}_packageName`] && 'border-red-400')}
                   placeholder="cth: Paket 6 Jam"
                   value={row.packageName}
                   onChange={e => updateRow(row._id, 'packageName', e.target.value)}
@@ -571,9 +571,9 @@ function ManualInputModal({ isOpen, onClose, onSuccess }) {
                 {errors[`${row._id}_packageName`] && <p className="text-xs text-red-500 mt-1">{errors[`${row._id}_packageName`]}</p>}
               </div>
               <div>
-                <label className="label text-xs">Durasi <span className="text-red-500">*</span></label>
+                <label className="label text-xs dark:text-gray-300">Durasi <span className="text-red-500">*</span></label>
                 <input
-                  className={clsx('input text-sm', errors[`${row._id}_duration`] && 'border-red-400')}
+                  className={clsx('input text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100', errors[`${row._id}_duration`] && 'border-red-400')}
                   placeholder="cth: 6 Jam"
                   value={row.duration}
                   onChange={e => updateRow(row._id, 'duration', e.target.value)}
@@ -585,12 +585,12 @@ function ManualInputModal({ isOpen, onClose, onSuccess }) {
             {/* Harga + Modal */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="label text-xs">Harga Jual <span className="text-red-500">*</span></label>
+                <label className="label text-xs dark:text-gray-300">Harga Jual <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">Rp</span>
                   <input
                     type="number"
-                    className={clsx('input pl-9 text-sm', errors[`${row._id}_price`] && 'border-red-400')}
+                    className={clsx('input pl-9 text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100', errors[`${row._id}_price`] && 'border-red-400')}
                     placeholder="0"
                     value={row.price}
                     onChange={e => updateRow(row._id, 'price', e.target.value)}
@@ -599,12 +599,12 @@ function ManualInputModal({ isOpen, onClose, onSuccess }) {
                 {errors[`${row._id}_price`] && <p className="text-xs text-red-500 mt-1">{errors[`${row._id}_price`]}</p>}
               </div>
               <div>
-                <label className="label text-xs">Modal <span className="text-gray-400 font-normal">(opsional)</span></label>
+                <label className="label text-xs dark:text-gray-300">Modal <span className="text-gray-400 font-normal">(opsional)</span></label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">Rp</span>
                   <input
                     type="number"
-                    className="input pl-9 text-sm"
+                    className="input pl-9 text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                     placeholder="0"
                     value={row.costPrice}
                     onChange={e => updateRow(row._id, 'costPrice', e.target.value)}
@@ -615,9 +615,9 @@ function ManualInputModal({ isOpen, onClose, onSuccess }) {
 
             {/* Catatan */}
             <div>
-              <label className="label text-xs">Catatan <span className="text-gray-400 font-normal">(opsional)</span></label>
+              <label className="label text-xs dark:text-gray-300">Catatan <span className="text-gray-400 font-normal">(opsional)</span></label>
               <input
-                className="input text-sm"
+                className="input text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                 placeholder="cth: password default"
                 value={row.notes}
                 onChange={e => updateRow(row._id, 'notes', e.target.value)}

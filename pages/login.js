@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import { Eye, EyeOff, Wifi, Lock, User, Loader2, Key, ChevronDown, ChevronUp, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, Wifi, Lock, User, Loader2, Key, ChevronDown, CheckCircle, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../services/supabaseClient'
 
@@ -13,9 +13,8 @@ export default function LoginPage() {
   const { login } = useAuth()
   const router = useRouter()
 
-  // Setup panel state
   const [showSetup, setShowSetup] = useState(false)
-  const [setupStep, setSetupStep] = useState(1) // 1: kode rahasia, 2: pilih nama + buat akun, 3: sukses
+  const [setupStep, setSetupStep] = useState(1)
   const [setupSecret, setSetupSecret] = useState('')
   const [secretError, setSecretError] = useState('')
   const [pendingAdmins, setPendingAdmins] = useState([])
@@ -30,425 +29,396 @@ export default function LoginPage() {
   const [setupError, setSetupError] = useState('')
   const [successName, setSuccessName] = useState('')
 
-  // Reset setup state saat panel ditutup
   function handleToggleSetup() {
     setShowSetup(prev => !prev)
-    setSetupStep(1)
-    setSetupSecret('')
-    setSecretError('')
-    setPendingAdmins([])
-    setSelectedAdmin(null)
-    setNewUsername('')
-    setNewPassword('')
-    setConfirmPassword('')
-    setSetupError('')
+    setSetupStep(1); setSetupSecret(''); setSecretError('')
+    setPendingAdmins([]); setSelectedAdmin(null)
+    setNewUsername(''); setNewPassword(''); setConfirmPassword(''); setSetupError('')
   }
 
-  // Step 1 → verifikasi kode & load pending admins
   async function handleSecretSubmit(e) {
-    e.preventDefault()
-    setSecretError('')
-
-    if (!setupSecret.trim()) {
-      setSecretError('Masukkan kode setup terlebih dahulu')
-      return
-    }
-
+    e.preventDefault(); setSecretError('')
+    if (!setupSecret.trim()) { setSecretError('Masukkan kode setup terlebih dahulu'); return }
     setLoadingAdmins(true)
     try {
-      // Verifikasi kode ke API dulu (ringan, tanpa data sensitif)
-      const res = await fetch('/api/setup/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ setupSecret }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setSecretError(data.message || 'Kode salah')
-        return
-      }
-
-      // Load pending admins (yang belum setup)
-      const { data, error } = await supabase
-        .from('admins')
-        .select('id, full_name')
-        .is('username', null)
-        .eq('role', 'admin')
-        .order('full_name')
-
+      const res = await fetch('/api/setup/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ setupSecret }) })
+      if (!res.ok) { const data = await res.json(); setSecretError(data.message || 'Kode salah'); return }
+      const { data, error } = await supabase.from('admins').select('id, full_name').is('username', null).eq('role', 'admin').order('full_name')
       if (error) throw error
-
-      if (!data || data.length === 0) {
-        setSecretError('Semua admin sudah memiliki akun.')
-        return
-      }
-
-      setPendingAdmins(data)
-      setSetupStep(2)
-    } catch (err) {
-      setSecretError('Gagal menghubungi server')
-    } finally {
-      setLoadingAdmins(false)
-    }
+      if (!data || data.length === 0) { setSecretError('Semua admin sudah memiliki akun.'); return }
+      setPendingAdmins(data); setSetupStep(2)
+    } catch { setSecretError('Gagal menghubungi server') }
+    finally { setLoadingAdmins(false) }
   }
 
-  // Step 2 → simpan akun
   async function handleRegister(e) {
-    e.preventDefault()
-    setSetupError('')
-
+    e.preventDefault(); setSetupError('')
     if (!selectedAdmin) { setSetupError('Pilih nama kamu'); return }
     if (newUsername.length < 3) { setSetupError('Username minimal 3 karakter'); return }
     if (newPassword.length < 6) { setSetupError('Password minimal 6 karakter'); return }
     if (newPassword !== confirmPassword) { setSetupError('Konfirmasi password tidak cocok'); return }
-
     setSetupLoading(true)
     try {
-      const res = await fetch('/api/setup/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          adminId: selectedAdmin.id,
-          username: newUsername.toLowerCase().trim(),
-          password: newPassword,
-          setupSecret,
-        }),
-      })
-
+      const res = await fetch('/api/setup/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminId: selectedAdmin.id, username: newUsername.toLowerCase().trim(), password: newPassword, setupSecret }) })
       const data = await res.json()
       if (!res.ok) { setSetupError(data.message || 'Terjadi kesalahan'); return }
-
-      setSuccessName(selectedAdmin.full_name)
-      setSetupStep(3)
-    } catch {
-      setSetupError('Gagal menghubungi server')
-    } finally {
-      setSetupLoading(false)
-    }
+      setSuccessName(selectedAdmin.full_name); setSetupStep(3)
+    } catch { setSetupError('Gagal menghubungi server') }
+    finally { setSetupLoading(false) }
   }
 
-  // Login form submit
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.username || !form.password) {
-      setError('Username dan password wajib diisi')
-      return
-    }
-    setLoading(true)
-    setError('')
-    try {
-      await login(form.username, form.password)
-      router.push('/dashboard')
-    } catch (err) {
-      setError(err.message || 'Login gagal')
-    } finally {
-      setLoading(false)
-    }
+    if (!form.username || !form.password) { setError('Username dan password wajib diisi'); return }
+    setLoading(true); setError('')
+    try { await login(form.username, form.password); router.push('/dashboard') }
+    catch (err) { setError(err.message || 'Login gagal') }
+    finally { setLoading(false) }
+  }
+
+  const inp = {
+    base: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', borderRadius: '12px', padding: '12px 16px', width: '100%', fontSize: '14px', outline: 'none', fontFamily: "'JetBrains Mono', monospace", transition: 'all 0.2s' },
   }
 
   return (
     <>
       <Head>
         <title>WifiSekre.net</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+        <style>{`
+          .lp-root { font-family: 'Sora', sans-serif !important; }
+          .lp-mono { font-family: 'JetBrains Mono', monospace !important; }
+          .lp-bg {
+            background-color: #07080f;
+            background-image:
+              radial-gradient(ellipse 80% 50% at 50% -5%, rgba(124,58,237,0.4) 0%, transparent 60%),
+              radial-gradient(ellipse 35% 35% at 80% 85%, rgba(99,102,241,0.15) 0%, transparent 55%),
+              radial-gradient(ellipse 25% 25% at 15% 65%, rgba(139,92,246,0.1) 0%, transparent 50%);
+          }
+          .lp-grid {
+            background-image:
+              linear-gradient(rgba(139,92,246,0.07) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(139,92,246,0.07) 1px, transparent 1px);
+            background-size: 44px 44px;
+          }
+          .lp-grid-dots {
+            background-image: radial-gradient(circle, rgba(139,92,246,0.22) 1px, transparent 1px);
+            background-size: 44px 44px;
+            background-position: -1px -1px;
+          }
+          .lp-card {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 20px;
+            padding: 32px;
+          }
+          .lp-input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #f1f5f9;
+            border-radius: 12px;
+            padding: 12px 16px;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+          }
+          .lp-input::placeholder { color: rgba(148,163,184,0.4); }
+          .lp-input:focus {
+            border-color: rgba(139,92,246,0.65);
+            background: rgba(139,92,246,0.08);
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.14);
+          }
+          .lp-input.lp-input-pl { padding-left: 42px; }
+          .lp-input.lp-input-pr { padding-right: 44px; }
+          .lp-input.lp-err { border-color: rgba(239,68,68,0.55); background: rgba(239,68,68,0.06); }
+          .lp-label {
+            display: block;
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: rgba(148,163,184,0.6);
+            margin-bottom: 7px;
+          }
+          .lp-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #8B5CF6 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.015em;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 20px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+          }
+          .lp-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.15); }
+          .lp-btn:active:not(:disabled) { transform: translateY(0); }
+          .lp-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+          .lp-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.22); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #fca5a5; display: flex; align-items: center; gap: 8px; }
+          .lp-ring {
+            position: absolute; border-radius: 50%;
+            border: 1px solid rgba(139,92,246,0.2);
+            animation: lp-ring 3s ease-out infinite;
+          }
+          @keyframes lp-ring {
+            0% { transform: scale(0.7); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+          }
+          .lp-slide { animation: lp-slideup 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+          .lp-slide-d { animation: lp-slideup 0.55s cubic-bezier(0.22,1,0.36,1) 0.1s both; }
+          @keyframes lp-slideup {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .lp-setup-btn {
+            width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 11px 15px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            color: rgba(148,163,184,0.6);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          .lp-setup-btn:hover { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.28); color: #c4b5fd; }
+          .lp-admin-opt {
+            width: 100%; display: flex; align-items: center; gap: 10px;
+            padding: 10px 13px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            text-align: left; cursor: pointer;
+            transition: all 0.15s;
+            color: #cbd5e1; font-size: 13px;
+          }
+          .lp-admin-opt:hover { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.3); }
+          .lp-admin-opt.sel { background: rgba(139,92,246,0.14); border-color: rgba(139,92,246,0.45); color: #c4b5fd; }
+          .lp-hr { height: 1px; background: rgba(255,255,255,0.07); margin: 22px 0; }
+          .lp-step-dot { height: 4px; border-radius: 4px; transition: all 0.3s; }
+        `}</style>
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-primary-600 via-primary-500 to-violet-500 flex items-center justify-center p-4">
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 -left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-accent-400/20 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl" />
-        </div>
+      <div className="lp-root lp-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Grid layers */}
+        <div className="lp-grid absolute inset-0 pointer-events-none" />
+        <div className="lp-grid-dots absolute inset-0 pointer-events-none" />
+        {/* Top glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ width: '700px', height: '320px', background: 'radial-gradient(ellipse, rgba(124,58,237,0.18) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(1px)' }} />
 
-        <div className="relative w-full max-w-sm animate-slide-up">
+        <div className="relative w-full lp-slide" style={{ maxWidth: '390px' }}>
+
           {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-white/30">
-              <Wifi className="w-8 h-8 text-white" />
+          <div className="text-center mb-9">
+            <div className="relative inline-flex items-center justify-center mb-5" style={{ width: '72px', height: '72px' }}>
+              <div className="lp-ring" style={{ width: '72px', height: '72px', animationDelay: '0s' }} />
+              <div className="lp-ring" style={{ width: '72px', height: '72px', animationDelay: '1s' }} />
+              <div className="lp-ring" style={{ width: '72px', height: '72px', animationDelay: '2s' }} />
+              <div style={{ width: '56px', height: '56px', background: 'linear-gradient(145deg, #7c3aed, #5b21b6)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 24px rgba(124,58,237,0.6), 0 0 60px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.2)', border: '1px solid rgba(196,181,253,0.25)', position: 'relative', zIndex: 1 }}>
+                <Wifi style={{ width: '26px', height: '26px', color: 'white' }} />
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-white">WiFi Voucher</h1>
-            <p className="text-white/70 text-sm mt-1">Masuk ke sistem manajemen</p>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>
+              WifiSekre<span style={{ color: '#a78bfa' }}>.net</span>
+            </h1>
+            <p style={{ fontSize: '13px', color: 'rgba(148,163,184,0.55)', marginTop: '6px' }}>
+              Sistem Manajemen Voucher WiFi
+            </p>
           </div>
 
           {/* Card */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
+          <div className="lp-card lp-slide-d">
 
-            {/* ── LOGIN FORM ── */}
-            <div className="p-8">
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-5 text-sm text-red-700 flex items-center gap-2">
-                  <span className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center text-red-500 font-bold shrink-0">!</span>
-                  {error}
+            {!showSetup ? (
+              /* ── LOGIN ── */
+              <>
+                <div style={{ marginBottom: '24px' }}>
+                  <h2 style={{ fontSize: '17px', fontWeight: 600, color: 'white', letterSpacing: '-0.01em' }}>Masuk ke Akun</h2>
+                  <p style={{ fontSize: '12px', color: 'rgba(148,163,184,0.45)', marginTop: '4px' }}>Masukkan kredensial admin kamu</p>
                 </div>
-              )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="label">Username</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={form.username}
-                      onChange={e => setForm(p => ({ ...p, username: e.target.value }))}
-                      placeholder="Masukkan username"
-                      className="input pl-10"
-                      autoComplete="username"
-                      autoFocus
-                      disabled={loading}
-                    />
+                {error && (
+                  <div className="lp-error" style={{ marginBottom: '18px' }}>
+                    <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '11px', fontWeight: 700, color: '#f87171' }}>!</span>
+                    {error}
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <label className="label">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={form.password}
-                      onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                      placeholder="Masukkan password"
-                      className="input pl-10 pr-10"
-                      autoComplete="current-password"
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label className="lp-label">Username</label>
+                    <div style={{ position: 'relative' }}>
+                      <User style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                      <input type="text" autoComplete="username" value={form.username}
+                        onChange={e => setForm(p => ({ ...p, username: e.target.value }))}
+                        placeholder="username" className="lp-input lp-input-pl" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="lp-label">Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <Lock style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                      <input type={showPassword ? 'text' : 'password'} autoComplete="current-password"
+                        value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                        placeholder="••••••••" className="lp-input lp-input-pl lp-input-pr" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(148,163,184,0.4)', padding: 0 }}>
+                        {showPassword ? <EyeOff style={{ width: '15px', height: '15px' }} /> : <Eye style={{ width: '15px', height: '15px' }} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ paddingTop: '4px' }}>
+                    <button type="submit" disabled={loading} className="lp-btn">
+                      {loading ? <><Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} /> Memverifikasi...</> : 'Masuk'}
                     </button>
                   </div>
+                </form>
+
+                <div className="lp-hr" />
+
+                <button onClick={handleToggleSetup} className="lp-setup-btn" style={{ fontFamily: 'Sora, sans-serif' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Key style={{ width: '13px', height: '13px', color: '#8B5CF6' }} />
+                    Admin baru? Aktivasi akun
+                  </span>
+                  <ChevronDown style={{ width: '15px', height: '15px' }} />
+                </button>
+              </>
+            ) : (
+              /* ── SETUP ── */
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                  <button onClick={handleToggleSetup}
+                    style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(148,163,184,0.6)', flexShrink: 0 }}>
+                    <ArrowLeft style={{ width: '15px', height: '15px' }} />
+                  </button>
+                  <div>
+                    <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'white' }}>Aktivasi Akun</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '5px' }}>
+                      {[1, 2].map(s => (
+                        <div key={s} className="lp-step-dot"
+                          style={{ width: setupStep > s ? '18px' : setupStep === s ? '24px' : '8px', background: setupStep >= s ? '#8B5CF6' : 'rgba(255,255,255,0.1)' }} />
+                      ))}
+                      <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.4)', marginLeft: '4px' }}>
+                        {setupStep === 1 ? 'Verifikasi' : setupStep === 2 ? 'Buat Akun' : 'Selesai'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-primary btn w-full btn-lg mt-2"
-                >
-                  {loading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" />Memproses...</>
-                  ) : 'Masuk'}
-                </button>
-              </form>
-            </div>
-
-            {/* ── DIVIDER + TOGGLE ── */}
-            <div className="px-8 pb-2">
-              <button
-                type="button"
-                onClick={handleToggleSetup}
-                className="w-full flex items-center justify-between py-3 px-4 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-primary-600 transition-all border border-dashed border-gray-200 hover:border-primary-300"
-              >
-                <span className="flex items-center gap-2">
-                  <Key className="w-4 h-4" />
-                  Admin baru? Buat akun di sini
-                </span>
-                {showSetup
-                  ? <ChevronUp className="w-4 h-4" />
-                  : <ChevronDown className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {/* ── SETUP PANEL ── */}
-            {showSetup && (
-              <div className="px-8 pb-8 pt-4 border-t border-gray-100 mt-2">
-
-                {/* Step 1: Kode rahasia */}
                 {setupStep === 1 && (
-                  <form onSubmit={handleSecretSubmit} className="space-y-4">
+                  <form onSubmit={handleSecretSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                        Setup Akun Admin
-                      </p>
-                      <label className="label">Kode Rahasia</label>
-                      <div className="relative">
-                        <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type="password"
-                          value={setupSecret}
-                          onChange={e => { setSetupSecret(e.target.value); setSecretError('') }}
-                          placeholder="Masukkan kode dari superadmin"
-                          className="input pl-10"
-                        />
+                      <label className="lp-label">Kode Rahasia</label>
+                      <div style={{ position: 'relative' }}>
+                        <Key style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                        <input type="text" value={setupSecret} onChange={e => setSetupSecret(e.target.value)}
+                          placeholder="Kode dari superadmin" className="lp-input lp-input-pl" />
                       </div>
-                      {secretError && (
-                        <p className="text-red-500 text-xs mt-1.5">{secretError}</p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-1.5">
-                        Hubungi superadmin untuk mendapatkan kode ini.
-                      </p>
+                      {secretError && <p style={{ fontSize: '12px', color: '#fca5a5', marginTop: '6px' }}>{secretError}</p>}
+                      <p style={{ fontSize: '11.5px', color: 'rgba(148,163,184,0.38)', marginTop: '5px' }}>Hubungi superadmin untuk mendapatkan kode ini.</p>
                     </div>
-
-                    <button
-                      type="submit"
-                      disabled={loadingAdmins}
-                      className="w-full py-2.5 bg-primary-600 text-white rounded-xl font-medium text-sm hover:bg-primary-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      {loadingAdmins
-                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Memverifikasi...</>
-                        : 'Verifikasi Kode'}
+                    <button type="submit" disabled={loadingAdmins} className="lp-btn">
+                      {loadingAdmins ? <><Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} /> Memverifikasi...</> : 'Verifikasi Kode'}
                     </button>
                   </form>
                 )}
 
-                {/* Step 2: Pilih nama + buat akun */}
                 {setupStep === 2 && (
-                  <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <button
-                        type="button"
-                        onClick={() => setSetupStep(1)}
-                        className="text-gray-400 hover:text-gray-600 transition"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                      </button>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Pilih Nama & Buat Akun
-                      </p>
-                    </div>
-
-                    {/* Pilih nama */}
+                  <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
-                      <label className="label">Nama kamu</label>
-                      <div className="space-y-2">
+                      <label className="lp-label">Pilih Nama Kamu</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                         {pendingAdmins.map(admin => (
-                          <button
-                            key={admin.id}
-                            type="button"
-                            onClick={() => setSelectedAdmin(admin)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-left transition-all text-sm ${
-                              selectedAdmin?.id === admin.id
-                                ? 'border-primary-500 bg-primary-50 text-primary-700'
-                                : 'border-gray-200 hover:border-primary-200 text-gray-700'
-                            }`}
-                          >
-                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
-                              selectedAdmin?.id === admin.id
-                                ? 'bg-primary-500 text-white'
-                                : 'bg-gray-100 text-gray-500'
-                            }`}>
+                          <button key={admin.id} type="button" onClick={() => setSelectedAdmin(admin)}
+                            className={`lp-admin-opt ${selectedAdmin?.id === admin.id ? 'sel' : ''}`} style={{ fontFamily: 'Sora, sans-serif' }}>
+                            <div style={{ width: '28px', height: '28px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px', flexShrink: 0, background: selectedAdmin?.id === admin.id ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.07)', color: selectedAdmin?.id === admin.id ? '#c4b5fd' : 'rgba(148,163,184,0.6)' }}>
                               {admin.full_name.charAt(0)}
                             </div>
-                            <span className="font-medium">{admin.full_name}</span>
-                            {selectedAdmin?.id === admin.id && (
-                              <CheckCircle className="w-4 h-4 text-primary-500 ml-auto shrink-0" />
-                            )}
+                            <span style={{ fontWeight: 500 }}>{admin.full_name}</span>
+                            {selectedAdmin?.id === admin.id && <CheckCircle style={{ width: '15px', height: '15px', marginLeft: 'auto', flexShrink: 0, color: '#8B5CF6' }} />}
                           </button>
                         ))}
                       </div>
                     </div>
-
-                    {/* Username baru */}
                     <div>
-                      <label className="label">Buat Username</label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type="text"
-                          value={newUsername}
-                          onChange={e => setNewUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
-                          placeholder="Username untuk login"
-                          className="input pl-10"
-                        />
+                      <label className="lp-label">Username</label>
+                      <div style={{ position: 'relative' }}>
+                        <User style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                        <input type="text" value={newUsername} onChange={e => setNewUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                          placeholder="Username untuk login" className="lp-input lp-input-pl" />
                       </div>
                     </div>
-
-                    {/* Password baru */}
                     <div>
-                      <label className="label">Buat Password</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type={showNewPass ? 'text' : 'password'}
-                          value={newPassword}
-                          onChange={e => setNewPassword(e.target.value)}
-                          placeholder="Min. 6 karakter"
-                          className="input pl-10 pr-10"
-                        />
+                      <label className="lp-label">Password</label>
+                      <div style={{ position: 'relative' }}>
+                        <Lock style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                        <input type={showNewPass ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                          placeholder="Min. 6 karakter" className="lp-input lp-input-pl lp-input-pr" />
                         <button type="button" onClick={() => setShowNewPass(!showNewPass)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabIndex={-1}>
-                          {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(148,163,184,0.4)', padding: 0 }}>
+                          {showNewPass ? <EyeOff style={{ width: '15px', height: '15px' }} /> : <Eye style={{ width: '15px', height: '15px' }} />}
                         </button>
                       </div>
                     </div>
-
-                    {/* Konfirmasi password */}
                     <div>
-                      <label className="label">Konfirmasi Password</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type={showConfirm ? 'text' : 'password'}
-                          value={confirmPassword}
-                          onChange={e => setConfirmPassword(e.target.value)}
+                      <label className="lp-label">Konfirmasi Password</label>
+                      <div style={{ position: 'relative' }}>
+                        <Lock style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: 'rgba(148,163,184,0.35)' }} />
+                        <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                           placeholder="Ulangi password"
-                          className={`input pl-10 pr-10 ${
-                            confirmPassword && confirmPassword !== newPassword
-                              ? 'border-red-400 bg-red-50'
-                              : confirmPassword && confirmPassword === newPassword
-                              ? 'border-green-400 bg-green-50'
-                              : ''
-                          }`}
-                        />
+                          className={`lp-input lp-input-pl lp-input-pr ${confirmPassword && confirmPassword !== newPassword ? 'lp-err' : ''}`} />
                         <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabIndex={-1}>
-                          {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(148,163,184,0.4)', padding: 0 }}>
+                          {showConfirm ? <EyeOff style={{ width: '15px', height: '15px' }} /> : <Eye style={{ width: '15px', height: '15px' }} />}
                         </button>
                       </div>
                     </div>
-
-                    {setupError && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
-                        <p className="text-xs text-red-600">{setupError}</p>
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={setupLoading}
-                      className="w-full py-2.5 bg-primary-600 text-white rounded-xl font-medium text-sm hover:bg-primary-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      {setupLoading
-                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...</>
-                        : <><CheckCircle className="w-4 h-4" /> Aktivasi Akun</>}
+                    {setupError && <div className="lp-error"><span style={{ fontSize: '11px', fontWeight: 700, color: '#f87171', flexShrink: 0 }}>!</span>{setupError}</div>}
+                    <button type="submit" disabled={setupLoading} className="lp-btn">
+                      {setupLoading ? <><Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} /> Menyimpan...</> : <><CheckCircle style={{ width: '16px', height: '16px' }} /> Aktivasi Akun</>}
                     </button>
                   </form>
                 )}
 
-                {/* Step 3: Sukses */}
                 {setupStep === 3 && (
-                  <div className="text-center py-2">
-                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <CheckCircle className="w-7 h-7 text-green-500" />
+                  <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                    <div style={{ width: '60px', height: '60px', borderRadius: '18px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <CheckCircle style={{ width: '28px', height: '28px', color: '#4ade80' }} />
                     </div>
-                    <h3 className="font-bold text-gray-800 mb-1">Akun Aktif, {successName}! 🎉</h3>
-                    <p className="text-xs text-gray-500 mb-4">
+                    <h3 style={{ fontWeight: 600, color: 'white', marginBottom: '6px' }}>Akun Aktif, {successName}! 🎉</h3>
+                    <p style={{ fontSize: '12px', color: 'rgba(148,163,184,0.45)', marginBottom: '20px' }}>
                       Gunakan username & password yang baru kamu buat untuk login.
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowSetup(false)
-                        setSetupStep(1)
-                      }}
-                      className="w-full py-2.5 bg-primary-600 text-white rounded-xl font-medium text-sm hover:bg-primary-700 transition"
-                    >
+                    <button type="button" onClick={() => { setShowSetup(false); setSetupStep(1) }} className="lp-btn">
                       Login Sekarang
                     </button>
                   </div>
                 )}
               </div>
             )}
-
-            <p className="text-center text-xs text-gray-400 pb-6 px-8">
-              WiFi Voucher Management System v1.0
-            </p>
           </div>
+
+          {/* Footer */}
+          <p className="lp-mono" style={{ textAlign: 'center', fontSize: '10px', color: 'rgba(148,163,184,0.2)', marginTop: '20px', letterSpacing: '0.08em' }}>
+            WIFI VOUCHER MANAGEMENT · v2.0.2
+          </p>
         </div>
       </div>
     </>

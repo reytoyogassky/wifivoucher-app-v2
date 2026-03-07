@@ -246,35 +246,35 @@ function AddAdminModal({ isOpen, onClose, onSuccess }) {
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{errors.submit}</div>
         )}
         <div>
-          <label className="label">Nama Lengkap <span className="text-red-500">*</span></label>
+          <label className="label dark:text-gray-300">Nama Lengkap <span className="text-red-500">*</span></label>
           <input
             type="text"
             value={form.full_name}
             onChange={e => { setForm(p => ({ ...p, full_name: e.target.value })); setErrors(p => ({ ...p, full_name: '' })) }}
-            className={`input ${errors.full_name ? 'input-error' : ''}`}
+            className={`input dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 ${errors.full_name ? 'input-error' : ''}`}
             placeholder="Nama lengkap admin"
           />
           {errors.full_name && <p className="text-xs text-red-600 mt-1">{errors.full_name}</p>}
         </div>
         <div>
-          <label className="label">Username <span className="text-red-500">*</span></label>
+          <label className="label dark:text-gray-300">Username <span className="text-red-500">*</span></label>
           <input
             type="text"
             value={form.username}
             onChange={e => { setForm(p => ({ ...p, username: e.target.value })); setErrors(p => ({ ...p, username: '' })) }}
-            className={`input ${errors.username ? 'input-error' : ''}`}
+            className={`input dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 ${errors.username ? 'input-error' : ''}`}
             placeholder="username"
           />
           {errors.username && <p className="text-xs text-red-600 mt-1">{errors.username}</p>}
         </div>
         <div>
-          <label className="label">Password <span className="text-red-500">*</span></label>
+          <label className="label dark:text-gray-300">Password <span className="text-red-500">*</span></label>
           <div className="relative">
             <input
               type={showPass ? 'text' : 'password'}
               value={form.password}
               onChange={e => { setForm(p => ({ ...p, password: e.target.value })); setErrors(p => ({ ...p, password: '' })) }}
-              className={`input pr-10 ${errors.password ? 'input-error' : ''}`}
+              className={`input pr-10 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 ${errors.password ? 'input-error' : ''}`}
               placeholder="Min. 6 karakter"
             />
             <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -284,11 +284,11 @@ function AddAdminModal({ isOpen, onClose, onSuccess }) {
           {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
         </div>
         <div>
-          <label className="label">Role</label>
+          <label className="label dark:text-gray-300">Role</label>
           <select
             value={form.role}
             onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
-            className="input"
+            className="input dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
           >
             <option value="admin">Admin</option>
             <option value="superadmin">Super Admin</option>

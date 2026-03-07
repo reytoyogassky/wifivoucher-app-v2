@@ -41,20 +41,20 @@ export default function Modal({
 
       {/* Modal */}
       <div className={clsx(
-        'relative w-full bg-white rounded-2xl shadow-2xl animate-slide-up',
+        'relative w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl animate-slide-up',
         'flex flex-col max-h-[90vh]',
         SIZES[size],
       )}>
         {/* Header */}
         {(title || !hideClose) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
             {title && (
-              <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h2>
             )}
             {!hideClose && (
               <button
                 onClick={onClose}
-                className="ml-auto text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1.5 rounded-xl transition-colors"
+                className="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-xl transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -69,7 +69,7 @@ export default function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
+          <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-2xl">
             {footer}
           </div>
         )}
@@ -81,7 +81,7 @@ export default function Modal({
 export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, loading, confirmText = 'Hapus', confirmVariant = 'danger' }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      <p className="text-gray-600 text-sm">{message}</p>
+      <p className="text-gray-600 dark:text-gray-300 text-sm">{message}</p>
       <div className="flex gap-3 mt-6">
         <button
           onClick={onClose}
