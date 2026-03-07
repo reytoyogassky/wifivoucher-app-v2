@@ -2,9 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
+  "/api/setup/register": "pages/api/setup/register.js",
   "/dashboard": "pages/dashboard.js",
-  "/sell": "pages/sell.js",
-  "/login": "pages/login.js",
-  "/vouchers": "pages/vouchers.js",
-  "/api/auth/login": "pages/api/auth/login.js"
+  "/api/auth/login": "pages/api/auth/login.js",
+  "/login": "pages/login.js"
 }
