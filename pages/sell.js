@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge'
 import { Skeleton } from '../components/ui/Skeleton'
 import { getAvailableVouchers } from '../services/voucherService'
 import { createSale, getCustomersWithDebt, addToExistingDebt } from '../services/salesService'
+import { logActivity, LOG_ACTIONS } from '../services/logService'
 import { formatCurrency } from '../utils/formatCurrency'
 import { downloadVoucherImage } from '../utils/generateVoucherImage'
 import { useAuth } from '../context/AuthContext'
@@ -121,6 +122,20 @@ if (
 }
 
       setSuccessSale({ ...result.sale, vouchers: result.vouchers })
+
+      // Catat log aktivitas
+      logActivity({
+        adminId:     admin.id,
+        adminName:   admin.full_name,
+        action:      LOG_ACTIONS.SELL,
+        description: `Menjual ${result.vouchers?.length || selected.length} voucher kepada ${form.customerName.trim()}`,
+        metadata: {
+          voucherCount:  result.vouchers?.length || selected.length,
+          totalAmount:   result.sale?.total_amount,
+          paymentMethod: form.paymentMethod,
+          customerName:  form.customerName.trim(),
+        },
+      })
       setSelected([])
       setForm({ customerName: '', customerPhone: '', paymentMethod: 'cash', notes: '' })
       setSelectedCustomer(null)
@@ -157,7 +172,7 @@ if (
           <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-gray-900">Pilih Voucher</h2>
+                <h2 className="font-bold text-gray-900 dark:text-white">Pilih Voucher</h2>
                 <span className="text-xs text-gray-400">{filtered.length} tersedia</span>
               </div>
 
@@ -213,7 +228,7 @@ if (
             {/* Selected vouchers */}
             {selected.length > 0 && (
               <div className="card">
-                <h3 className="text-sm font-bold text-gray-900 mb-3">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
                   Dipilih ({selected.length})
                 </h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -221,7 +236,7 @@ if (
                     <div key={v.id} className="flex items-center justify-between bg-primary-50 rounded-xl px-3 py-2">
                       <div>
                         <p className="text-xs font-mono font-bold text-primary-700">{v.code}</p>
-                        <p className="text-xs text-gray-500">{v.package_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{v.package_name}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-primary-600">{formatCurrency(v.price)}</span>
@@ -233,7 +248,7 @@ if (
                   ))}
                 </div>
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
-                  <span className="text-sm font-medium text-gray-600">Total</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Total</span>
                   <span className="text-lg font-bold text-primary-600">{formatCurrency(totalAmount)}</span>
                 </div>
               </div>
@@ -241,7 +256,7 @@ if (
 
             {/* Form */}
             <div className="card">
-              <h3 className="font-bold text-gray-900 mb-4">Detail Transaksi</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white mb-4">Detail Transaksi</h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="label">Nama Pelanggan <span className="text-red-500">*</span></label>
@@ -279,7 +294,7 @@ if (
                     />
                     {/* Dropdown suggestions */}
                     {showSuggestions && customerSuggestions.length > 0 && (
-                      <div ref={suggestionsRef} className="absolute z-50 top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden max-h-52 overflow-y-auto">
+                      <div ref={suggestionsRef} className="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-52 overflow-y-auto">
                         {customerSuggestions.map((c, i) => (
                           <button
                             key={i}
@@ -300,14 +315,14 @@ if (
     setAddToDebt(true)
   }
 }}
-                            className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors text-left border-b border-gray-50 last:border-0"
+                            className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left border-b border-gray-50 dark:border-gray-700/50 last:border-0"
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-xs font-bold text-primary-600">
                                 {c.name.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-gray-900">{c.name}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{c.name}</p>
                                 {c.phone && <p className="text-xs text-gray-400">{c.phone}</p>}
                               </div>
                             </div>
@@ -387,7 +402,7 @@ if (
                               ? method.color === 'emerald'
                                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                                 : 'border-amber-500 bg-amber-50 text-amber-700'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                              : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
                           )}
                         >
                           <Icon className="w-4 h-4" />
@@ -401,8 +416,8 @@ if (
 
                 {/* Total */}
                 {selected.length > 0 && (
-                  <div className="bg-gray-50 rounded-xl p-3 flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{selected.length} voucher</span>
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 flex justify-between items-center">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{selected.length} voucher</span>
                     <span className="text-xl font-bold text-primary-600">{formatCurrency(totalAmount)}</span>
                   </div>
                 )}
@@ -461,13 +476,13 @@ function VoucherCard({ voucher, selected, onToggle }) {
         'w-full text-left p-4 rounded-xl border-2 transition-all duration-150',
         selected
           ? 'border-primary-500 bg-primary-50 shadow-glow-sm'
-          : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50'
+          : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 hover:bg-gray-50 dark:hover:bg-gray-800'
       )}
     >
       <div className="flex items-start justify-between mb-2">
         <span className={clsx(
           'text-xs font-mono font-bold px-2 py-0.5 rounded-md',
-          selected ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600'
+          selected ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
         )}>
           {voucher.code}
         </span>
@@ -478,7 +493,7 @@ function VoucherCard({ voucher, selected, onToggle }) {
           {selected && <Check className="w-3 h-3 text-white" />}
         </div>
       </div>
-      <p className="text-sm font-semibold text-gray-900">{voucher.package_name}</p>
+      <p className="text-sm font-semibold text-gray-900 dark:text-white">{voucher.package_name}</p>
       <p className="text-xs text-gray-400 mb-2">{voucher.duration} · {voucher.speed || '-'}</p>
       <p className="text-base font-bold text-primary-600">{formatCurrency(voucher.price)}</p>
     </button>
@@ -499,15 +514,15 @@ function SaleSuccessContent({ sale }) {
         </Badge>
       </div>
       <div>
-        <p className="text-xs font-medium text-gray-500 mb-2">Voucher ({sale.vouchers?.length})</p>
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Voucher ({sale.vouchers?.length})</p>
         <div className="space-y-2">
           {sale.vouchers?.map(v => (
-            <div key={v.id} className="flex justify-between items-center bg-gray-50 rounded-lg px-3 py-2">
+            <div key={v.id} className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2">
               <div>
                 <span className="text-xs font-mono font-bold text-primary-700">{v.code}</span>
-                <span className="text-xs text-gray-500 ml-2">{v.package_name}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{v.package_name}</span>
               </div>
-              <span className="text-xs font-semibold text-gray-700">{formatCurrency(v.price)}</span>
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{formatCurrency(v.price)}</span>
             </div>
           ))}
         </div>

@@ -9,6 +9,7 @@ import { ConfirmModal } from '../components/ui/Modal'
 import { TableSkeleton } from '../components/ui/Skeleton'
 import { formatDateTime } from '../utils/formatDate'
 import { useAuth } from '../context/AuthContext'
+import { logActivity, LOG_ACTIONS } from '../services/logService'
 import { useNotifications } from '../context/NotificationContext'
 
 function AdminsPage() {
@@ -45,6 +46,12 @@ function AdminsPage() {
         const d = await res.json()
         throw new Error(d.message)
       }
+      logActivity({
+        adminId: currentAdmin.id, adminName: currentAdmin.full_name,
+        action: LOG_ACTIONS.ADMIN_DELETE,
+        description: `Menghapus admin "${confirmDelete.full_name}" (@${confirmDelete.username})`,
+        metadata: { deletedAdminId: confirmDelete.id, deletedAdminName: confirmDelete.full_name },
+      })
       setAdmins(prev => prev.filter(a => a.id !== confirmDelete.id))
       addToast({ type: 'success', title: 'Admin berhasil dihapus' })
       setConfirmDelete(null)
@@ -112,10 +119,10 @@ function AdminsPage() {
                               {a.full_name.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <span className="font-medium text-gray-900">{a.full_name}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">{a.full_name}</span>
                         </div>
                       </td>
-                      <td className="font-mono text-xs text-gray-600">@{a.username}</td>
+                      <td className="font-mono text-xs text-gray-600 dark:text-gray-300">@{a.username}</td>
                       <td>
                         <Badge variant={a.role === 'superadmin' ? 'purple' : 'gray'}>
                           {a.role === 'superadmin' ? (
@@ -158,6 +165,12 @@ function AdminsPage() {
         isOpen={showAdd}
         onClose={() => setShowAdd(false)}
         onSuccess={(newAdmin) => {
+          logActivity({
+            adminId: currentAdmin.id, adminName: currentAdmin.full_name,
+            action: LOG_ACTIONS.ADMIN_CREATE,
+            description: `Menambahkan admin baru "${newAdmin.full_name}" (@${newAdmin.username})`,
+            metadata: { newAdminId: newAdmin.id, newAdminName: newAdmin.full_name, role: newAdmin.role },
+          })
           setAdmins(prev => [newAdmin, ...prev])
           setShowAdd(false)
           addToast({ type: 'success', title: 'Admin berhasil ditambahkan!' })

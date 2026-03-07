@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 
 // Kode rahasia setup — GANTI dengan string acak yang kamu bagikan ke 5 admin
 // Simpan juga di .env.local sebagai SETUP_SECRET
-const SETUP_SECRET = 'adminbaik123' // contoh, ganti dengan yang lebih aman di produksi
+const SETUP_SECRET = process.env.SETUP_SECRET  // contoh, ganti dengan yang lebih aman di produksi
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

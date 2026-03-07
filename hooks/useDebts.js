@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { getDebts, getDebtSummary, payDebt } from '../services/debtService'
 import { useNotifications } from '../context/NotificationContext'
 import { useAuth } from './useAuth'
+import { logActivity, LOG_ACTIONS } from '../services/logService'
 
 export function useDebts(initialFilters = {}) {
   const [debts, setDebts] = useState([])
@@ -39,7 +40,15 @@ export function useDebts(initialFilters = {}) {
 
   const handlePayDebt = useCallback(async (debtId, amount, notes) => {
     try {
-      await payDebt({ debtId, adminId: admin.id, amount, notes })
+      const result = await payDebt({ debtId, adminId: admin.id, amount, notes })
+      logActivity({
+        adminId: admin.id, adminName: admin.full_name,
+        action: result?.status === 'paid' ? LOG_ACTIONS.DEBT_PAY_FULL : LOG_ACTIONS.DEBT_PAY,
+        description: result?.status === 'paid'
+          ? `Melunasi hutang ${result?.customer_name || ''} sebesar Rp ${Number(amount).toLocaleString('id-ID')}`
+          : `Membayar sebagian hutang ${result?.customer_name || ''} sebesar Rp ${Number(amount).toLocaleString('id-ID')}`,
+        metadata: { debtId, amount, customerName: result?.customer_name, status: result?.status },
+      })
       addToast({ type: 'success', title: 'Pembayaran berhasil!', message: `Rp ${Number(amount).toLocaleString('id-ID')} diterima` })
       fetchDebts(filters, pagination.page)
       fetchSummary()

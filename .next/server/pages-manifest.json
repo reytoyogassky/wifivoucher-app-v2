@@ -2,8 +2,12 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/api/setup/register": "pages/api/setup/register.js",
+  "/sales": "pages/sales.js",
   "/dashboard": "pages/dashboard.js",
-  "/api/auth/login": "pages/api/auth/login.js",
-  "/login": "pages/login.js"
+  "/logs": "pages/logs.js",
+  "/admins": "pages/admins.js",
+  "/api/admins": "pages/api/admins.js",
+  "/debts": "pages/debts.js",
+  "/vouchers": "pages/vouchers.js",
+  "/sell": "pages/sell.js"
 }

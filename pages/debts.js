@@ -24,7 +24,7 @@ function DebtsPage() {
   const [payAmount, setPayAmount]       = useState('')
   const [payNotes, setPayNotes]         = useState('')
   const [paying, setPaying]             = useState(false)
-  const [activeTab, setActiveTab]       = useState('unpaid')
+  const [activeTab, setActiveTab]       = useState('all')
   const [exporting, setExporting]       = useState(false)
   const [selected, setSelected]         = useState(new Set())
   const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false)
@@ -118,11 +118,11 @@ function DebtsPage() {
           {/* Toolbar */}
           <div className="p-3 border-b border-gray-100 space-y-3">
             {/* Tabs — scrollable on mobile */}
-            <div className="flex gap-1 bg-gray-100 p-1 rounded-xl overflow-x-auto">
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl overflow-x-auto">
               {tabs.map(tab => (
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                   className={clsx('px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0',
-                    activeTab === tab.key ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                    activeTab === tab.key ? 'bg-white dark:bg-gray-700 text-primary-700 dark:text-primary-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200')}>
                   {tab.label}
                 </button>
               ))}
@@ -148,10 +148,10 @@ function DebtsPage() {
                     <Trash2 className="w-3.5 h-3.5" /> Hapus Semua ▾
                   </button>
                   {showDeleteMenu && (
-                    <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-20">
+                    <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-20">
                       {[{ key: 'unpaid', label: 'Belum Lunas', color: 'text-red-600' }, { key: 'partial', label: 'Sebagian', color: 'text-amber-600' }, { key: 'paid', label: 'Lunas', color: 'text-emerald-600' }].map((s, i) => (
                         <button key={s.key} onClick={() => { setConfirmDeleteAll(s.key); setShowDeleteMenu(false) }}
-                          className={clsx('w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700', i === 0 && 'rounded-t-xl')}>
+                          className={clsx('w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700', i === 0 && 'rounded-t-xl')}>
                           Hapus semua <span className={clsx('font-semibold', s.color)}>{s.label}</span>
                         </button>
                       ))}
@@ -190,7 +190,7 @@ function DebtsPage() {
                             </button>
                           )}
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 text-sm truncate">{debt.customer_name}</p>
+                            <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{debt.customer_name}</p>
                             {debt.customer_phone && <p className="text-xs text-gray-400">{debt.customer_phone}</p>}
                           </div>
                         </div>
@@ -255,7 +255,7 @@ function DebtsPage() {
                               </button>
                             </td>
                           )}
-                          <td><p className="font-medium text-gray-900">{debt.customer_name}</p>{debt.customer_phone && <p className="text-xs text-gray-400">{debt.customer_phone}</p>}</td>
+                          <td><p className="font-medium text-gray-900 dark:text-white">{debt.customer_name}</p>{debt.customer_phone && <p className="text-xs text-gray-400">{debt.customer_phone}</p>}</td>
                           <td className="font-medium">{formatCurrency(debt.total_amount)}</td>
                           <td className="text-emerald-600 font-medium">{formatCurrency(debt.paid_amount)}</td>
                           <td className="text-red-600 font-bold">{formatCurrency(debt.remaining_amount)}</td>
@@ -264,11 +264,11 @@ function DebtsPage() {
                               <div className="flex-1 bg-gray-200 rounded-full h-1.5">
                                 <div className={clsx('h-1.5 rounded-full', pct >= 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-amber-500' : 'bg-gray-300')} style={{ width: `${Math.min(pct, 100)}%` }} />
                               </div>
-                              <span className="text-xs text-gray-500 shrink-0">{Math.round(pct)}%</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">{Math.round(pct)}%</span>
                             </div>
                           </td>
                           <td><Badge variant={debt.status === 'paid' ? 'green' : debt.status === 'partial' ? 'yellow' : 'red'} dot>{debt.status === 'paid' ? 'Lunas' : debt.status === 'partial' ? 'Sebagian' : 'Belum'}</Badge></td>
-                          <td>{debt.due_date ? <div className={clsx('flex items-center gap-1 text-xs', overdue ? 'text-red-600 font-medium' : 'text-gray-500')}>{overdue && <AlertTriangle className="w-3 h-3" />}{formatDate(debt.due_date)}</div> : '-'}</td>
+                          <td>{debt.due_date ? <div className={clsx('flex items-center gap-1 text-xs', overdue ? 'text-red-600 font-medium' : 'text-gray-500 dark:text-gray-400')}>{overdue && <AlertTriangle className="w-3 h-3" />}{formatDate(debt.due_date)}</div> : '-'}</td>
                           <td onClick={e => e.stopPropagation()}>
                             {debt.status !== 'paid' && (
                               <button onClick={() => { setPayModal(debt); setPayAmount(String(debt.remaining_amount)) }} className="btn btn-success btn-sm text-xs">
@@ -294,15 +294,15 @@ function DebtsPage() {
         footer={<div className="flex gap-3"><button onClick={() => setPayModal(null)} className="btn btn-secondary flex-1" disabled={paying}>Batal</button><button onClick={submitPayment} className="btn btn-success flex-1" disabled={paying}>{paying ? 'Memproses...' : 'Konfirmasi Bayar'}</button></div>}>
         {payModal && (
           <div className="space-y-4">
-            <div className="bg-gray-50 rounded-xl p-3">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3">
               <p className="text-xs text-gray-400">Pelanggan</p>
-              <p className="font-semibold text-gray-900">{payModal.customer_name}</p>
-              <div className="flex justify-between mt-2 text-sm"><span className="text-gray-500">Sisa hutang</span><span className="font-bold text-red-600">{formatCurrency(payModal.remaining_amount)}</span></div>
+              <p className="font-semibold text-gray-900 dark:text-white">{payModal.customer_name}</p>
+              <div className="flex justify-between mt-2 text-sm"><span className="text-gray-500 dark:text-gray-400">Sisa hutang</span><span className="font-bold text-red-600">{formatCurrency(payModal.remaining_amount)}</span></div>
             </div>
             <div>
               <label className="label">Jumlah Bayar <span className="text-red-500">*</span></label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-medium">Rp</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400 font-medium">Rp</span>
                 <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} className="input pl-9" min="1" max={payModal.remaining_amount} placeholder="0" />
               </div>
               <button type="button" onClick={() => setPayAmount(String(payModal.remaining_amount))} className="text-xs text-primary-600 font-medium mt-2">Bayar Lunas ({formatCurrency(payModal.remaining_amount)})</button>

@@ -33,7 +33,13 @@ export async function getDebts({
   const { data, error, count } = await query
   if (error) throw error
 
-  return { data, count, totalPages: Math.ceil(count / limit) }
+  // Kalau tidak ada filter status (tab Semua), sort: unpaid → partial → paid
+  const STATUS_PRIORITY = { unpaid: 0, partial: 1, paid: 2 }
+  const sorted = !status
+    ? [...data].sort((a, b) => (STATUS_PRIORITY[a.status] ?? 3) - (STATUS_PRIORITY[b.status] ?? 3))
+    : data
+
+  return { data: sorted, count, totalPages: Math.ceil(count / limit) }
 }
 
 /**

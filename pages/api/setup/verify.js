@@ -2,7 +2,7 @@
 // Endpoint ringan: hanya cek apakah kode rahasia benar
 // Tidak mengembalikan data sensitif apapun
 
-const SETUP_SECRET = 'adminbaik123'
+const SETUP_SECRET = process.env.SETUP_SECRET  // contoh, ganti dengan yang lebih aman di produksi
 
 export default function handler(req, res) {
   if (req.method !== 'POST') {

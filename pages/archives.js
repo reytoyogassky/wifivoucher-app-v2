@@ -48,8 +48,8 @@ function ArchivesPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Arsip Bulanan</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Rekap hasil penjualan per periode</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Arsip Bulanan</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Rekap hasil penjualan per periode</p>
           </div>
           {isSuperAdmin && (
             <button onClick={() => setShowClosing(true)} className="btn btn-primary">
@@ -82,7 +82,7 @@ function ArchivesPage() {
                       <Archive className="w-6 h-6 text-primary-600" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 text-base">{arc.period_label}</p>
+                      <p className="font-bold text-gray-900 dark:text-white text-base">{arc.period_label}</p>
                       <p className="text-xs text-gray-400 mt-0.5">
                         {formatDate(arc.period_start)} — {formatDate(arc.period_end)}
                       </p>
@@ -157,18 +157,18 @@ function ArchiveDetailModal({ archiveId, onClose }) {
       ) : (
         <div className="space-y-5">
           {/* Period info */}
-          <div className="bg-gray-50 rounded-xl p-3 flex flex-wrap gap-4 text-sm">
-            <span className="text-gray-500">Periode: <strong className="text-gray-800">{formatDate(arc.period_start)} — {formatDate(arc.period_end)}</strong></span>
-            <span className="text-gray-500">Ditutup: <strong className="text-gray-800">{formatDateTime(arc.closed_at)}</strong></span>
-            <span className="text-gray-500">Oleh: <strong className="text-gray-800">{arc.admins?.full_name || '-'}</strong></span>
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 flex flex-wrap gap-4 text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Periode: <strong className="text-gray-800">{formatDate(arc.period_start)} — {formatDate(arc.period_end)}</strong></span>
+            <span className="text-gray-500 dark:text-gray-400">Ditutup: <strong className="text-gray-800">{formatDateTime(arc.closed_at)}</strong></span>
+            <span className="text-gray-500 dark:text-gray-400">Oleh: <strong className="text-gray-800">{arc.admins?.full_name || '-'}</strong></span>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
             {[{ key: 'summary', label: 'Ringkasan' }, { key: 'admins', label: 'Performa Admin' }, { key: 'vouchers', label: 'Voucher Terjual' }].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
                 className={clsx('px-3 py-1.5 text-xs font-medium rounded-lg transition-all',
-                  tab === t.key ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                  tab === t.key ? 'bg-white dark:bg-gray-700 text-primary-700 dark:text-primary-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200')}>
                 {t.label}
               </button>
             ))}
@@ -185,15 +185,15 @@ function ArchiveDetailModal({ archiveId, onClose }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="bg-emerald-50 rounded-2xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Pendapatan Cash</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Pendapatan Cash</p>
                   <p className="text-2xl font-bold text-emerald-700">{formatCurrency(arc.cash_revenue)}</p>
                 </div>
                 <div className="bg-blue-50 rounded-2xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Hutang yang Dilunasi</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Hutang yang Dilunasi</p>
                   <p className="text-2xl font-bold text-blue-700">{formatCurrency(arc.debt_paid_revenue)}</p>
                 </div>
                 <div className="bg-amber-50 rounded-2xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Sisa Hutang Aktif</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Sisa Hutang Aktif</p>
                   <p className="text-2xl font-bold text-amber-700">{formatCurrency(arc.total_new_debt)}</p>
                   <p className="text-xs text-gray-400 mt-1">dibawa ke periode berikutnya</p>
                 </div>
@@ -224,7 +224,7 @@ function ArchiveDetailModal({ archiveId, onClose }) {
                       {data.adminPerf.map((a, i) => (
                         <tr key={a.id}>
                           <td className="text-gray-400 text-sm">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`}</td>
-                          <td className="font-semibold text-gray-900">{a.admin_name}</td>
+                          <td className="font-semibold text-gray-900 dark:text-white">{a.admin_name}</td>
                           <td>{a.total_sales}</td>
                           <td className="font-semibold text-primary-600">{formatCurrency(a.total_revenue)}</td>
                           <td className="text-emerald-600">{formatCurrency(a.cash_revenue)}</td>
@@ -249,7 +249,7 @@ function ArchiveDetailModal({ archiveId, onClose }) {
                 <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <div className="overflow-x-auto max-h-96 overflow-y-auto">
                     <table className="table text-xs">
-                      <thead className="sticky top-0 bg-gray-50 z-10">
+                      <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/90 z-10">
                         <tr>
                           <th className="whitespace-nowrap">Kode</th>
                           <th className="whitespace-nowrap">Paket</th>
@@ -273,7 +273,7 @@ function ArchiveDetailModal({ archiveId, onClose }) {
                                 {d.payment_method === 'cash' ? 'Cash' : 'Hutang'}
                               </Badge>
                             </td>
-                            <td className="text-gray-500 whitespace-nowrap">{d.admin_name}</td>
+                            <td className="text-gray-500 dark:text-gray-400 whitespace-nowrap">{d.admin_name}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -427,7 +427,7 @@ function ClosingModal({ admin, onClose, onSuccess }) {
               { label: 'Transaksi', value: preview.totalTransactions, color: 'text-gray-800' },
               { label: 'Voucher Terjual', value: preview.totalVouchersSold, color: 'text-gray-800' },
             ].map(s => (
-              <div key={s.label} className="bg-gray-50 rounded-xl p-3 text-center">
+              <div key={s.label} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-400">{s.label}</p>
                 <p className={clsx('text-xl font-bold mt-1', s.color)}>{s.value}</p>
               </div>
@@ -442,7 +442,7 @@ function ClosingModal({ admin, onClose, onSuccess }) {
               { label: 'Sisa Hutang Aktif (dibawa ke depan)', value: preview.totalNewDebt, color: 'text-amber-600' },
             ].map(r => (
               <div key={r.label} className="flex justify-between items-center py-1.5 border-b border-gray-100">
-                <span className="text-gray-600">{r.label}</span>
+                <span className="text-gray-600 dark:text-gray-300">{r.label}</span>
                 <span className={clsx('font-semibold', r.color)}>{formatCurrency(r.value)}</span>
               </div>
             ))}
@@ -459,7 +459,7 @@ function ClosingModal({ admin, onClose, onSuccess }) {
           {/* Performa admin preview */}
           {preview.adminPerformance.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-2">Performa Admin</p>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Performa Admin</p>
               <div className="border border-gray-200 rounded-xl overflow-hidden">
                 <table className="table text-xs">
                   <thead><tr><th>Admin</th><th>Transaksi</th><th>Revenue</th><th>Profit</th></tr></thead>

@@ -329,3 +329,75 @@ export async function addToExistingDebt({ debtId, adminId, voucherIds, customerN
 
   return { sale, vouchers }
 }
+/**
+ * Get sales chart data grouped by hour (today) or day (week/month)
+ */
+
+/**
+ * Get sales chart data grouped by hour (today) or day (week/month)
+ * profit = cash sales + debt payments received in the period
+ */
+export async function getSalesChartData(startDate, endDate, groupBy = 'day') {
+  let salesQuery = supabase
+    .from('sales')
+    .select('created_at, total_amount, payment_method')
+    .order('created_at', { ascending: true })
+  if (startDate) salesQuery = salesQuery.gte('created_at', startDate)
+  if (endDate)   salesQuery = salesQuery.lte('created_at', endDate)
+
+  let dpQuery = supabase
+    .from('debt_payments')
+    .select('created_at, amount')
+    .order('created_at', { ascending: true })
+  if (startDate) dpQuery = dpQuery.gte('created_at', startDate)
+  if (endDate)   dpQuery = dpQuery.lte('created_at', endDate)
+
+  const [{ data: salesData, error: sErr }, { data: dpData, error: dpErr }] = await Promise.all([salesQuery, dpQuery])
+  if (sErr) throw sErr
+
+  const map = {}
+
+  if (groupBy === 'hour') {
+    for (let h = 0; h < 24; h++) {
+      const label = `${String(h).padStart(2, '0')}:00`
+      map[label] = { label, revenue: 0, transactions: 0, cash: 0, debt: 0, profit: 0 }
+    }
+  } else {
+    const start = new Date(startDate)
+    const end   = new Date(endDate)
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const label = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
+      map[label] = { label, revenue: 0, transactions: 0, cash: 0, debt: 0, profit: 0 }
+    }
+  }
+
+  const toLabel = (iso) => {
+    const dt = new Date(iso)
+    return groupBy === 'hour'
+      ? `${String(dt.getHours()).padStart(2, '0')}:00`
+      : dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
+  }
+
+  salesData.forEach(s => {
+    const label = toLabel(s.created_at)
+    if (!map[label]) map[label] = { label, revenue: 0, transactions: 0, cash: 0, debt: 0, profit: 0 }
+    map[label].revenue      += Number(s.total_amount)
+    map[label].transactions += 1
+    if (s.payment_method === 'cash') {
+      map[label].cash   += Number(s.total_amount)
+      map[label].profit += Number(s.total_amount)
+    } else {
+      map[label].debt += Number(s.total_amount)
+    }
+  })
+
+  if (!dpErr && dpData) {
+    dpData.forEach(p => {
+      const label = toLabel(p.created_at)
+      if (!map[label]) map[label] = { label, revenue: 0, transactions: 0, cash: 0, debt: 0, profit: 0 }
+      map[label].profit += Number(p.amount)
+    })
+  }
+
+  return Object.values(map)
+}

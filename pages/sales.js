@@ -16,6 +16,7 @@ import { formatDateTime, toInputDate } from '../utils/formatDate'
 import { generateSalesPDF } from '../utils/pdfGenerator'
 import { useNotifications } from '../context/NotificationContext'
 import { useAuth } from '../context/AuthContext'
+import { logActivity, LOG_ACTIONS } from '../services/logService'
 import clsx from 'clsx'
 
 function SalesPage() {
@@ -32,7 +33,7 @@ function SalesPage() {
   const [showDeleteMenu, setShowDeleteMenu] = useState(false)
   const deleteMenuRef = useRef()
   const { addToast } = useNotifications()
-  const { isSuperAdmin } = useAuth()
+  const { isSuperAdmin, admin } = useAuth()
 
   useEffect(() => { fetchSales(); getAdmins().then(setAdmins).catch(console.error) }, [])
 
@@ -67,14 +68,34 @@ function SalesPage() {
 
   async function handleDeleteSelected() {
     setDeleting(true)
-    try { await deleteSalesBulk([...selected]); setConfirmDeleteSelected(false); setSelected(new Set()); addToast({ type: 'success', title: `${selectedCount} transaksi dihapus` }); fetchSales() }
+    try {
+      await deleteSalesBulk([...selected])
+      logActivity({
+        adminId: admin.id, adminName: admin.full_name,
+        action: selectedCount === 1 ? LOG_ACTIONS.SALE_DELETE : LOG_ACTIONS.SALE_DELETE,
+        description: selectedCount === 1
+          ? `Menghapus 1 riwayat penjualan`
+          : `Menghapus ${selectedCount} riwayat penjualan sekaligus`,
+        metadata: { count: selectedCount },
+      })
+      setConfirmDeleteSelected(false); setSelected(new Set()); addToast({ type: 'success', title: `${selectedCount} transaksi dihapus` }); fetchSales()
+    }
     catch (err) { addToast({ type: 'error', title: 'Gagal hapus', message: err.message }) }
     finally { setDeleting(false) }
   }
 
   async function handleDeleteAll() {
     setDeleting(true)
-    try { await deleteAllSales(); setConfirmDeleteAll(false); setSelected(new Set()); addToast({ type: 'success', title: 'Semua riwayat dihapus' }); fetchSales() }
+    try {
+      await deleteAllSales()
+      logActivity({
+        adminId: admin.id, adminName: admin.full_name,
+        action: LOG_ACTIONS.SALE_DELETE_ALL,
+        description: `Menghapus SEMUA riwayat penjualan`,
+        metadata: {},
+      })
+      setConfirmDeleteAll(false); setSelected(new Set()); addToast({ type: 'success', title: 'Semua riwayat dihapus' }); fetchSales()
+    }
     catch (err) { addToast({ type: 'error', title: 'Gagal hapus', message: err.message }) }
     finally { setDeleting(false) }
   }
@@ -113,7 +134,7 @@ function SalesPage() {
                   <Trash2 className="w-4 h-4" /> Hapus Semua ▾
                 </button>
                 {showDeleteMenu && (
-                  <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-20">
+                  <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-20">
                     <button onClick={() => { setConfirmDeleteAll(true); setShowDeleteMenu(false) }}
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 font-semibold hover:bg-red-50 rounded-xl">
                       Hapus SEMUA riwayat
@@ -163,7 +184,7 @@ function SalesPage() {
         )}
 
         {!loading && pagination.count > 0 && (
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
             <span><strong className="text-gray-800">{pagination.count}</strong> transaksi</span>
             <span>•</span>
             <span>Total: <strong className="text-primary-600">{formatCurrency(sales.reduce((s, t) => s + Number(t.total_amount), 0))}</strong></span>
@@ -203,7 +224,7 @@ function SalesPage() {
                     </div>
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="font-semibold text-gray-900 text-sm">{sale.customer_name}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white text-sm">{sale.customer_name}</p>
                         <p className="text-xs text-gray-400">{sale.admins?.full_name || '-'} · {sale.sale_items?.length ?? 0} voucher · {formatDateTime(sale.created_at)}</p>
                       </div>
                       <p className="font-bold text-primary-600 shrink-0 ml-2">{formatCurrency(sale.total_amount)}</p>
@@ -240,12 +261,12 @@ function SalesPage() {
                           </td>
                         )}
                         <td><span className="font-mono text-xs text-primary-700 font-bold">{sale.transaction_code || sale.id.slice(0, 8)}</span></td>
-                        <td><p className="font-medium text-gray-900">{sale.customer_name}</p>{sale.customer_phone && <p className="text-xs text-gray-400">{sale.customer_phone}</p>}</td>
-                        <td className="text-gray-600">{sale.admins?.full_name || '-'}</td>
-                        <td><span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">{sale.sale_items?.length ?? 0} voucher</span></td>
-                        <td className="font-semibold text-gray-900">{formatCurrency(sale.total_amount)}</td>
+                        <td><p className="font-medium text-gray-900 dark:text-white">{sale.customer_name}</p>{sale.customer_phone && <p className="text-xs text-gray-400">{sale.customer_phone}</p>}</td>
+                        <td className="text-gray-600 dark:text-gray-300">{sale.admins?.full_name || '-'}</td>
+                        <td><span className="text-xs bg-gray-100 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-md">{sale.sale_items?.length ?? 0} voucher</span></td>
+                        <td className="font-semibold text-gray-900 dark:text-white">{formatCurrency(sale.total_amount)}</td>
                         <td><Badge variant={sale.payment_method === 'cash' ? 'green' : 'yellow'} dot>{sale.payment_method === 'cash' ? 'Cash' : 'Hutang'}</Badge></td>
-                        <td className="text-xs text-gray-500">{formatDateTime(sale.created_at)}</td>
+                        <td className="text-xs text-gray-500 dark:text-gray-400">{formatDateTime(sale.created_at)}</td>
                         <td onClick={e => e.stopPropagation()}>
                           <button onClick={() => setDetailSale(sale)} className="btn btn-secondary btn-sm !px-2"><Eye className="w-3.5 h-3.5" /></button>
                         </td>
@@ -284,20 +305,20 @@ function SaleDetail({ sale }) {
           ['Total', <span className="font-bold text-primary-600">{formatCurrency(sale.total_amount)}</span>],
           ['Tanggal', formatDateTime(sale.created_at)],
         ].map(([label, value], i) => (
-          <div key={i} className="bg-gray-50 rounded-xl p-3">
+          <div key={i} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3">
             <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-            <p className="text-sm font-medium text-gray-900">{value}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{value}</p>
           </div>
         ))}
       </div>
       <div>
-        <p className="text-sm font-bold text-gray-700 mb-2">Voucher ({sale.sale_items?.length})</p>
+        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">Voucher ({sale.sale_items?.length})</p>
         <div className="space-y-2">
           {sale.sale_items?.map(item => (
             <div key={item.id} className="flex justify-between items-center border border-dashed border-primary-200 rounded-xl px-3 py-2 bg-primary-50/50">
               <div>
                 <span className="text-xs font-mono font-bold text-primary-700">{item.voucher_code}</span>
-                <span className="text-xs text-gray-500 ml-2">{item.package_name}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{item.package_name}</span>
               </div>
               <span className="text-xs font-semibold">{formatCurrency(item.price)}</span>
             </div>
