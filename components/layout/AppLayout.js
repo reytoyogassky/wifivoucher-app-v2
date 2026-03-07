@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import {
   LayoutDashboard, ShoppingCart, History, CreditCard,
-  Users, LogOut, Menu, X, Bell, Wifi, ChevronRight, Ticket, Archive,
+  Users, LogOut, Menu, X, Bell, Wifi, ChevronRight, Ticket, Archive, Plus,
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useAuth } from '../../context/AuthContext'
@@ -162,11 +162,71 @@ export default function AppLayout({ children }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 lg:p-6 animate-fade-in">
+        <main className="flex-1 p-4 lg:p-6 animate-fade-in pb-24 lg:pb-6">
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-around px-2 pt-2 pb-3 relative">
+
+          {/* Dashboard */}
+          <MobileNavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" router={router} />
+
+          {/* Riwayat */}
+          <MobileNavItem href="/sales" icon={History} label="Riwayat" router={router} />
+
+          {/* FAB - Jual Voucher (center) */}
+          <div className="flex flex-col items-center -mt-6 relative">
+            <Link
+              href="/sell"
+              className={clsx(
+                'w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-200 active:scale-95',
+                router.pathname === '/sell'
+                  ? 'bg-primary-700 shadow-primary-300'
+                  : 'bg-primary-500 shadow-primary-200 hover:bg-primary-600'
+              )}
+            >
+              <ShoppingCart className="w-6 h-6 text-white" />
+            </Link>
+            <span className={clsx(
+              'text-[10px] font-semibold mt-1.5',
+              router.pathname === '/sell' ? 'text-primary-700' : 'text-gray-500'
+            )}>
+              Jual
+            </span>
+          </div>
+
+          {/* Hutang */}
+          <MobileNavItem href="/debts" icon={CreditCard} label="Hutang" router={router} />
+
+          {/* Voucher */}
+          <MobileNavItem href="/vouchers" icon={Ticket} label="Voucher" router={router} />
+
+        </div>
+      </nav>
     </div>
+  )
+}
+
+function MobileNavItem({ href, icon: Icon, label, router }) {
+  const active = router.pathname === href
+  return (
+    <Link href={href} className="flex flex-col items-center gap-1 px-2 py-1 min-w-[52px]">
+      <div className={clsx(
+        'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+        active ? 'bg-primary-100' : ''
+      )}>
+        <Icon className={clsx('w-5 h-5', active ? 'text-primary-600' : 'text-gray-400')} />
+      </div>
+      <span className={clsx(
+        'text-[10px] font-medium',
+        active ? 'text-primary-600' : 'text-gray-400'
+      )}>
+        {label}
+      </span>
+    </Link>
   )
 }
 

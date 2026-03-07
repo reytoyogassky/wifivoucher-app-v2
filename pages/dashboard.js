@@ -1,6 +1,7 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Wifi, ShoppingBag, DollarSign, CreditCard, AlertTriangle, TrendingUp, Users, Award } from 'lucide-react'
+import { Wifi, ShoppingBag, DollarSign, CreditCard, AlertTriangle, TrendingUp, Users, Award, ShoppingCart, ChevronRight } from 'lucide-react'
 import AppLayout from '../components/layout/AppLayout'
 import withAuth from '../components/layout/withAuth'
 import StatCard from '../components/cards/StatCard'
@@ -94,6 +95,28 @@ function DashboardPage() {
             ))}
           </div>
         </div>
+
+        {/* Mobile Quick Sell Banner */}
+        <Link
+          href="/sell"
+          className="lg:hidden flex items-center justify-between bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl px-5 py-4 shadow-lg shadow-primary-200 active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <ShoppingCart className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-base leading-tight">Jual Voucher</p>
+              <p className="text-primary-100 text-xs mt-0.5">
+                {loading ? '...' : `${stats?.voucherStats?.available ?? 0} voucher tersedia`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 bg-white/20 px-3 py-1.5 rounded-xl">
+            <span className="text-white font-semibold text-sm">Mulai</span>
+            <ChevronRight className="w-4 h-4 text-white" />
+          </div>
+        </Link>
 
         {/* Stats Grid */}
         {loading ? (

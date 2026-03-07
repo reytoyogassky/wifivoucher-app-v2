@@ -50,8 +50,8 @@ export default function LoginPage() {
             <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-white/30">
               <Wifi className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white">WiFi Voucher</h1>
-            <p className="text-white/70 text-sm mt-1">Masuk ke sistem manajemen</p>
+            <h1 className="text-2xl font-bold text-white">Wifisekre.net</h1>
+            <p className="text-white/70 text-sm mt-1">Masuk ke sistem manajemen Wifi</p>
           </div>
 
           {/* Card */}
@@ -124,7 +124,7 @@ export default function LoginPage() {
             </form>
 
             <p className="text-center text-xs text-gray-400 mt-6">
-              WiFi Voucher Management System v1.0
+              Wifisekre.net Management System v2.00
             </p>
           </div>
         </div>
