@@ -272,19 +272,6 @@ function SellPage() {
           </div>
         )}
 
-        {/* ── Floating "Pilih Voucher" FAB ── */}
-        <button
-          type="button"
-          onClick={() => setShowVoucherSheet(true)}
-          className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-primary-500 hover:bg-primary-600 active:scale-95 text-white font-bold text-sm px-4 py-3 rounded-2xl shadow-lg shadow-primary-500/40 transition-all touch-manipulation"
-        >
-          <Ticket className="w-4 h-4" />
-          Pilih Voucher
-          {totalVouchers > 0 && (
-            <span className="bg-white/25 text-white text-xs font-bold px-1.5 py-0.5 rounded-lg">{totalVouchers}</span>
-          )}
-        </button>
-
         {/* ── Voucher Bottom Sheet ── */}
         <VoucherBottomSheet
           isOpen={showVoucherSheet}
