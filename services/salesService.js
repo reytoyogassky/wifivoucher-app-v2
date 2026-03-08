@@ -73,6 +73,27 @@ export async function createSale({ adminId, customerName, customerPhone, payment
       })
 
     if (dErr) throw dErr
+
+    // 6. Kirim WA konfirmasi hutang (fire-and-forget, tidak hentikan transaksi)
+    if (customerPhone) {
+      try {
+        await fetch('/api/whatsapp/send-new-debt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName,
+            customerPhone,
+            totalAmount,
+            dueDate:         dueDate.toISOString(),
+            transactionCode: sale.transaction_code || sale.id.slice(0, 8),
+            items:           vouchers.map(v => ({
+              package_name: v.package_name,
+              voucher_code: v.code,
+            })),
+          }),
+        })
+      } catch { /* WA gagal tidak batalkan transaksi */ }
+    }
   }
 
   return { sale, vouchers }

@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useState, useEffect, useRef } from 'react'
-import { Search, Download, AlertTriangle, X, Banknote, Trash2, Square, CheckSquare, MinusSquare } from 'lucide-react'
+import { Search, Download, AlertTriangle, X, Banknote, Trash2, Square, CheckSquare, MinusSquare, MessageCircle } from 'lucide-react'
 import AppLayout from '../components/layout/AppLayout'
 import withAuth from '../components/layout/withAuth'
 import Badge from '../components/ui/Badge'
@@ -26,6 +26,7 @@ function DebtsPage() {
   const [paying, setPaying]             = useState(false)
   const [activeTab, setActiveTab]       = useState('all')
   const [exporting, setExporting]       = useState(false)
+  const [sendingWA, setSendingWA]       = useState(false)
   const [selected, setSelected]         = useState(new Set())
   const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false)
   const [confirmDeleteAll, setConfirmDeleteAll]           = useState(false)
@@ -48,6 +49,30 @@ function DebtsPage() {
     try { const data = await getDebtsForExport({ status: activeTab === 'all' ? undefined : activeTab }); await generateDebtsPDF(data); addToast({ type: 'success', title: 'PDF berhasil diekspor!' }) }
     catch (err) { addToast({ type: 'error', title: 'Gagal ekspor', message: err.message }) }
     finally { setExporting(false) }
+  }
+
+  async function handleSendWA() {
+    setSendingWA(true)
+    try {
+      // Kirim ke semua overdue, atau hanya yang dipilih kalau ada selected
+      const body = selected.size > 0 ? { debtIds: [...selected] } : {}
+      const res = await fetch('/api/whatsapp/send-overdue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message)
+      addToast({
+        type: 'success',
+        title: `WA terkirim ke ${data.sent} pelanggan`,
+        message: data.failed > 0 ? `${data.failed} gagal (cek nomor telepon)` : undefined,
+      })
+    } catch (err) {
+      addToast({ type: 'error', title: 'Gagal kirim WA', message: err.message })
+    } finally {
+      setSendingWA(false)
+    }
   }
 
   async function submitPayment() {
@@ -137,6 +162,17 @@ function DebtsPage() {
               <button onClick={handleExport} disabled={exporting} className="btn btn-secondary btn-sm shrink-0">
                 <Download className="w-3.5 h-3.5" /> PDF
               </button>
+              {isSuperAdmin && (
+                <button
+                  onClick={handleSendWA}
+                  disabled={sendingWA}
+                  className="btn btn-sm shrink-0 bg-green-500 hover:bg-green-600 text-white border-green-500"
+                  title={selected.size > 0 ? `Kirim WA ke ${selected.size} dipilih` : 'Kirim WA reminder ke semua overdue'}
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  {sendingWA ? 'Mengirim...' : selected.size > 0 ? `WA (${selected.size})` : 'WA Overdue'}
+                </button>
+              )}
               {isSuperAdmin && selectedCount > 0 && (
                 <button onClick={() => setConfirmDeleteSelected(true)} className="btn btn-sm text-red-600 border-red-200 hover:bg-red-50 shrink-0">
                   <Trash2 className="w-3.5 h-3.5" /> Hapus {selectedCount}

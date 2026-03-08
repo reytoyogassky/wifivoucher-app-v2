@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"utils\\\\generateVoucherImage.js -> html2canvas\":{\"id\":\"utils\\\\generateVoucherImage.js -> html2canvas\",\"files\":[\"static/chunks/node_modules_html2canvas_dist_html2canvas_js.js\"]}}"
